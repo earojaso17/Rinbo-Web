@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seguimiento — RINBŌ Ichiba</title>
+<meta name="description" content="Consulta el estado de tu pedido. Sistema de seguimiento en línea en construcción; mientras tanto, por WhatsApp.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700;800&family=JetBrains+Mono:wght@400;700&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-name">RINBŌ</span>
+      <span class="brand-sub">Ichiba Japón</span>
+    </a>
+    <nav class="nav" id="nav-principal" aria-label="Navegación principal">
+      <a href="tienda.html" data-nav="tienda">Tienda</a>
+      <a href="como-funciona.html" data-nav="como">Cómo funciona</a>
+      <a href="acerca.html" data-nav="acerca">Nosotros</a>
+      <a href="faq.html" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="header-acciones">
+      <a href="seguimiento.html" class="btn-seg activo" data-nav="seg">Seguimiento</a>
+      <button class="btn-carrito" aria-label="Ver mi cotización">
+        Cotización <span class="carrito-count vacio">0</span>
+      </button>
+      <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="pagina-marco">
+<span class="deco-kanji" aria-hidden="true">輪宝</span>
+<main class="pagina">
+  <span class="eyebrow">Seguimiento</span>
+  <h1>¿En qué va tu pedido?</h1>
+  <div class="ruta"><span>NGO · Japón</span><span class="linea"></span><span>SCL · Chile</span></div>
+
+  <div class="seg-card">
+    <span class="seg-badge">En construcción</span>
+    <input class="seg-input" type="text" value="RIN-0000" disabled aria-label="Código de pedido (próximamente)">
+    <p class="seg-nota">Estamos construyendo el sistema de seguimiento en línea: pronto podrás ingresar tu código y ver cada etapa de tu pedido aquí mismo.</p>
+    <p class="seg-nota">Mientras tanto, consulta el estado por WhatsApp — te respondemos con el detalle al día.</p>
+    <a class="btn btn-linea" id="seg-wa" href="#" target="_blank" rel="noopener">Consultar por WhatsApp</a>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <span class="hanko" aria-hidden="true">輪</span>
+      <span>RINBŌ Ichiba · rinbo.store · hola@rinbo.store</span>
+    </div>
+    <span class="footer-tag">Lo que solo se consigue en Japón</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

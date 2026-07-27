@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tienda — RINBŌ Ichiba</title>
+<meta name="description" content="La Tienda de Rinbō: coleccionables, vestuario, relojes, tecnología y más, comprados en persona en Japón. Precios finales en CLP.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700;800&family=JetBrains+Mono:wght@400;700&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-name">RINBŌ</span>
+      <span class="brand-sub">Ichiba Japón</span>
+    </a>
+    <nav class="nav" id="nav-principal" aria-label="Navegación principal">
+      <a href="tienda.html" data-nav="tienda" class="activo">Tienda</a>
+      <a href="como-funciona.html" data-nav="como">Cómo funciona</a>
+      <a href="acerca.html" data-nav="acerca">Nosotros</a>
+      <a href="faq.html" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="header-acciones">
+      <a href="seguimiento.html" class="btn-seg" data-nav="seg">Seguimiento</a>
+      <button class="btn-carrito" aria-label="Ver mi cotización">
+        Cotización <span class="carrito-count vacio">0</span>
+      </button>
+      <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<div class="volver-wrap"><a class="volver" href="index.html">← Volver al inicio</a></div>
+
+<section class="catalogo-head" style="border-top:none">
+  <div class="catalogo-head-inner">
+    <div>
+      <h2 class="catalogo-titulo">La Tienda <span class="ichiba">(Ichiba)</span></h2>
+      <p class="catalogo-sub"><em>Ichiba</em> (市場) significa "mercado" en japonés.</p>
+      <span class="hero-eyebrow eyebrow-rojo">Catálogo completo</span>
+    </div>
+    <span class="catalogo-kanji" aria-hidden="true">市場</span>
+  </div>
+</section>
+
+<div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div>
+<div class="filtros filtros-subnivel" id="filtros-subcat" role="group" aria-label="Filtrar por subcategoría" hidden></div>
+<div class="filtros filtros-sub" id="filtros-estado" role="group" aria-label="Filtrar por estado"></div>
+
+<main class="grilla" id="grilla" data-pp="16" aria-live="polite"></main>
+<div class="paginacion" id="paginacion"></div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <span class="hanko" aria-hidden="true">輪</span>
+      <span>RINBŌ Ichiba · rinbo.store · hola@rinbo.store</span>
+    </div>
+    <span class="footer-tag">Lo que solo se consigue en Japón</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

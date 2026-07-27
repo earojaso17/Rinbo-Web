@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RINBŌ Ichiba — Lo que solo se consigue en Japón</title>
+<meta name="description" content="Cartas TCG, poleras UT de Uniqlo y relojes japoneses, comprados en persona en tiendas oficiales de Japón. Precio final en CLP, impuestos incluidos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Karla:wght@400;700;800&family=JetBrains+Mono:wght@400;700&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="brand" href="index.html">
+      <span class="brand-name">RINBŌ</span>
+      <span class="brand-sub">Ichiba Japón</span>
+    </a>
+    <nav class="nav" id="nav-principal" aria-label="Navegación principal">
+      <a href="tienda.html" data-nav="tienda">Tienda</a>
+      <a href="como-funciona.html" data-nav="como">Cómo funciona</a>
+      <a href="acerca.html" data-nav="acerca">Nosotros</a>
+      <a href="faq.html" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="header-acciones">
+      <a href="seguimiento.html" class="btn-seg" data-nav="seg">Seguimiento</a>
+      <button class="btn-carrito" aria-label="Ver mi cotización">
+        Cotización <span class="carrito-count vacio">0</span>
+      </button>
+      <button class="menu-btn" aria-label="Abrir menú" aria-expanded="false"><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-texto">
+    <span class="hero-eyebrow">Coleccionables · Tecnología · Accesorios · Vestuario · Belleza · Segunda mano · Encargos</span>
+    <h1>Lo que solo<br>se consigue<br><span class="negro">en Japón</span></h1>
+    <p class="hero-sub">Vivimos en Japón y compramos en persona lo que desde Chile es casi imposible de conseguir. Explora el catálogo o cuéntanos qué buscas.</p>
+    <p class="hero-encargo">¿Y si no está en el catálogo? <a href="#encargos">También lo encargamos</a>.</p>
+  </div>
+  <div class="hero-portada" id="hero-carrusel"></div>
+</section>
+
+<section class="destacados">
+  <div class="dest-inner">
+    <span class="hero-eyebrow">Destacados</span>
+    <div class="dest-row" id="destacados"></div>
+  </div>
+</section>
+
+
+
+
+<section class="catalogo-head">
+  <div class="catalogo-head-inner">
+    <div>
+      <h2 class="catalogo-titulo">La Tienda <span class="ichiba">(Ichiba)</span></h2>
+      <p class="catalogo-sub"><em>Ichiba</em> (市場) significa "mercado" en japonés.</p>
+      <span class="hero-eyebrow eyebrow-rojo">Catálogo completo</span>
+    </div>
+    <span class="catalogo-kanji" aria-hidden="true">市場</span>
+  </div>
+</section>
+
+<div class="filtros" id="filtros" role="group" aria-label="Filtrar por categoría"></div>
+<div class="filtros filtros-subnivel" id="filtros-subcat" role="group" aria-label="Filtrar por subcategoría" hidden></div>
+<div class="filtros filtros-sub" id="filtros-estado" role="group" aria-label="Filtrar por estado"></div>
+
+<main class="grilla" id="grilla" data-pp="8" aria-live="polite"></main>
+<div class="paginacion" id="paginacion" data-cta="1"></div>
+
+<section class="banda-encargos" id="encargos">
+  <div class="banda-inner">
+    <div>
+      <span class="hero-eyebrow">Servicio de encargos</span>
+      <h2>¿Buscas algo que no está en el catálogo?</h2>
+      <p>Si se consigue en Japón, lo encontramos: cámaras, figuras, instrumentos, ediciones limitadas, lo que sea. Escríbelo y agrégalo a tu cotización — te respondemos con precio final y disponibilidad.</p>
+    </div>
+    <form class="encargo-form" id="encargo-form">
+      <input type="text" id="encargo-input" placeholder="Ej: Lente Canon 50mm f1.8, figura de..." maxlength="140" aria-label="Qué quieres encargar">
+      <button type="submit" class="btn btn-rojo">Agregar a mi cotización</button>
+    </form>
+  </div>
+</section>
+
+<section class="banda-ofertas" id="banda-ofertas" hidden>
+  <div class="dest-inner">
+    <span class="hero-eyebrow eyebrow-rojo">En oferta</span>
+    <div class="dest-row" id="ofertas-row"></div>
+  </div>
+</section>
+
+<section class="banda-contacto">
+  <div class="contacto-inner">
+    <div>
+      <span class="hero-eyebrow">Contacto</span>
+      <h2>¿Hablamos?</h2>
+      <p>Asesoría para elegir, ayuda con un encargo o cualquier pregunta — te responde una persona, directo desde Japón.</p>
+    </div>
+    <a class="btn btn-rojo" id="contacto-wa" href="#" target="_blank" rel="noopener">Escríbenos por WhatsApp</a>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-marca">
+      <span class="hanko" aria-hidden="true">輪</span>
+      <span>RINBŌ Ichiba · rinbo.store · hola@rinbo.store</span>
+    </div>
+    <span class="footer-tag">Lo que solo se consigue en Japón</span>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

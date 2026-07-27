@@ -1,0 +1,1 @@
+Imágenes del carrusel de portada: portada.jpg, slide-2.jpg, slide-3.jpg, slide-4.jpg (verticales 4:5, mínimo 1200px, fotos propias desde Japón). Los títulos de cada slide se editan en js/app.js (CONFIG.heroSlides). Mientras falte una imagen, esa slide muestra el marco de marca con su título.
