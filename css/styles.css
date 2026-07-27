@@ -1053,3 +1053,6 @@ a:focus-visible, button:focus-visible {
   .btn-seg, .btn-carrito { font-size: 0.66rem; padding: 8px 11px; }
   .pag-cta { width: 100%; justify-content: center; }
 }
+
+/* ---------- contacto: correo ---------- */
+.contacto-botones { display: flex; gap: 12px; flex-wrap: wrap; }
