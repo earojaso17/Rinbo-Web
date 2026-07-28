@@ -376,6 +376,7 @@ function renderOfertas() {
 }
 
 /* ---------- Página de producto ---------- */
+function conSaltos(t) { return String(t).replace(/\n/g, "<br>"); }
 function tablaHTML(txt) {
   const filas = String(txt).split(/\n|;/).map(f => f.trim()).filter(Boolean)
     .map(f => f.split("|").map(c => c.trim()));
