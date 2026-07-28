@@ -247,6 +247,7 @@ function cardHTML(p) {
       <div class="card-foto">
         ${v ? '<span class="ribbon-vendido">Vendido</span>' : ""}
         ${!v && enOferta(p) ? '<span class="tag-oferta">Oferta</span>' : ""}
+        ${!v && p.estado ? `<span class="tag-estado">${p.estado}</span>` : ""}
         ${foto ? `<img src="${foto}" alt="${p.nombre}" loading="lazy">` : `<span class="placeholder">${p.id}</span>`}
       </div>
       <div class="card-body">
@@ -263,7 +264,7 @@ function cardHTML(p) {
 const FILTRO = { cat: "Todos", sub: "Todas", estado: "Todo" };
 
 function pasaEstado(p) {
-  const usado = String(p.estado || "").toLowerCase().includes("usado");
+  const usado = /usado|semi/i.test(String(p.estado || ""));
   switch (FILTRO.estado) {
     case "Nuevos": return !usado;
     case "Segunda mano": return usado;
@@ -421,7 +422,7 @@ function renderProducto() {
       <h1>${p.nombre}</h1>
       ${p.detalle ? `<p class="producto-detalle">${p.detalle}</p>` : ""}
       <div class="producto-badges">
-        <span class="badge">${p.estado}</span>
+        <span class="badge badge-estado">${p.estado}</span>
         ${badgeStock}
       </div>
       ${vendido(p) && sinPrecio(p)
