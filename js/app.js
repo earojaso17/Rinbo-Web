@@ -384,7 +384,7 @@ function renderProducto() {
     return;
   }
   document.title = `${p.nombre} — RINBŌ Ichiba`;
-  const fotos = [p.foto_1, p.foto_2, p.foto_3].filter(Boolean).map(fotoDrive);
+  const fotos = [p.foto_1, p.foto_2, p.foto_3, p.foto_4, p.foto_5, p.foto_6, p.foto_7].filter(Boolean).map(fotoDrive);
   const opciones = opcionesDe(p);
   window.__opsSeleccionadas = {};
   opciones.forEach(o => { window.__opsSeleccionadas[o.nombre] = o.valores[0]; });
