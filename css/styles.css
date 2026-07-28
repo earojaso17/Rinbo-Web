@@ -1060,3 +1060,25 @@ a:focus-visible, button:focus-visible {
 /* ---------- galería: hasta 7 fotos ---------- */
 .producto-thumbs { flex-wrap: wrap; }
 .producto-thumbs button { width: 62px; height: 62px; }
+
+/* ---------- tabla de tallas y nota al pie ---------- */
+.tallas { margin: 0 0 28px; max-width: 480px; }
+.tallas-nota { font-weight: 700; font-size: 0.9rem; margin-bottom: 10px; }
+.tabla-scroll { overflow-x: auto; }
+.tabla-tallas { border-collapse: collapse; width: 100%; font-family: var(--mono); font-size: 0.74rem; }
+.tabla-tallas th {
+  text-align: left; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--gris); border-bottom: 1px solid var(--sumi); padding: 8px 10px 8px 0;
+}
+.tabla-tallas td { border-bottom: 1px solid var(--linea); padding: 8px 10px 8px 0; white-space: nowrap; }
+.tabla-tallas td:last-child, .tabla-tallas th:last-child { color: var(--rojo); font-weight: 700; }
+.detalle-pie {
+  font-size: 0.86rem;
+  font-style: italic;
+  color: var(--gris);
+  line-height: 1.6;
+  border-left: 2px solid var(--linea);
+  padding-left: 14px;
+  margin: 0 0 30px;
+  max-width: 440px;
+}
