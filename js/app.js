@@ -404,7 +404,7 @@ function renderProducto() {
   window.__opsSeleccionadas = {};
   opciones.forEach(o => { window.__opsSeleccionadas[o.nombre] = o.valores[0]; });
   const badgeStock = p.stock === "En Chile"
-    ? '<span class="badge stock-chile">En Chile · entrega 2-3 días</span>'
+    ? '<span class="badge stock-chile">En Chile · despacho inmediato</span>'
     : `<span class="badge">${p.stock} · 2-4 semanas est.</span>`;
   cont.innerHTML = `
     <div class="producto-galeria">
@@ -423,7 +423,6 @@ function renderProducto() {
       <div class="producto-badges">
         <span class="badge">${p.estado}</span>
         ${badgeStock}
-        <span class="badge">Comprado en Japón · con boleta</span>
       </div>
       ${vendido(p) && sinPrecio(p)
         ? `<div class="producto-precio">Vendido</div>
