@@ -14,7 +14,7 @@ const CONFIG = {
     { img: "img/slide-5.jpg",  titulo: "SkinCare Perfecto", texto: "Los mejores productos para tu piel"}
   ],
   // URL CSV de la planilla pública (pestaña Catálogo publicada en la web). Vacío = productos de muestra.
-  sheetCsvUrl: ""
+  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv"
 };
 
 const PRODUCTOS_MUESTRA = [
