@@ -384,7 +384,7 @@ function tablaHTML(txt) {
   if (filas.length < 2) return "";
   const head = filas[0], body = filas.slice(1);
   return `<div class="tallas">
-    <p class="tallas-nota">Te recomendamos revisar la tabla de tallas o medidas antes de encargar.</p>
+    <p class="tallas-nota">Te recomendamos revisar la tabla de tallas, medidas o especificaciones antes de encargar.</p>
     <div class="tabla-scroll"><table class="tabla-tallas">
       <thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead>
       <tbody>${body.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>
