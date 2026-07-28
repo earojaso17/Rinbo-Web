@@ -1056,3 +1056,7 @@ a:focus-visible, button:focus-visible {
 
 /* ---------- contacto: correo ---------- */
 .contacto-botones { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ---------- galería: hasta 7 fotos ---------- */
+.producto-thumbs { flex-wrap: wrap; }
+.producto-thumbs button { width: 62px; height: 62px; }
