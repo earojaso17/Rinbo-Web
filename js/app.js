@@ -375,6 +375,19 @@ function renderOfertas() {
 }
 
 /* ---------- Página de producto ---------- */
+function tablaHTML(txt) {
+  const filas = String(txt).split(/\n|;/).map(f => f.trim()).filter(Boolean)
+    .map(f => f.split("|").map(c => c.trim()));
+  if (filas.length < 2) return "";
+  const head = filas[0], body = filas.slice(1);
+  return `<div class="tallas">
+    <p class="tallas-nota">Tallas asiáticas — te recomendamos revisar la tabla antes de encargar.</p>
+    <div class="tabla-scroll"><table class="tabla-tallas">
+      <thead><tr>${head.map(h => `<th>${h}</th>`).join("")}</tr></thead>
+      <tbody>${body.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>
+    </table></div>
+  </div>`;
+}
 function renderProducto() {
   const cont = document.getElementById("producto");
   const id = new URLSearchParams(location.search).get("id");
@@ -425,6 +438,8 @@ function renderProducto() {
         : `<div class="producto-precio">$${fmtCLP.format(p.precio_clp)} CLP</div>
            <p class="producto-precio-nota">Precio final · impuestos incluidos</p>`}
       ${p.descripcion ? `<p class="producto-desc">${p.descripcion}</p>` : ""}
+      ${p.tabla_tallas ? tablaHTML(p.tabla_tallas) : ""}
+      ${p.detalle_pie ? `<p class="detalle-pie">${p.detalle_pie}</p>` : ""}
       ${opciones.length ? `<div class="opciones">${opciones.map(o => `
         <div>
           <span class="opcion-nombre">${o.nombre}</span>
