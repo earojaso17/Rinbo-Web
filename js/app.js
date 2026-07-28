@@ -8,9 +8,10 @@ const CONFIG = {
   // Slides del carrusel de portada (edita títulos, textos y nombres de imagen en img/)
   heroSlides: [
     { img: "img/portada.jpg",  titulo: "Lo mejor de Japón, directo a tu puerta", texto: "Comprado en persona · enviado desde Japón" },
-    { img: "img/slide-2.jpg",  titulo: "Drops UT de Uniqlo", texto: "Colaboraciones que no salen de Japón" },
+    { img: "img/slide-2.jpg",  titulo: "Drops UT de Uniqlo", texto: "Colaboraciones de Anime que no salen de Japón" },
     { img: "img/slide-3.jpg",  titulo: "Relojes japoneses", texto: "Seiko · Citizen · Orient · Casio" },
-    { img: "img/slide-4.jpg",  titulo: "¿Buscas algo específico?", texto: "Servicio de encargos desde Japón", link: "#encargos" }
+    { img: "img/slide-4.jpg",  titulo: "Cartas TCG", texto: "Pokemón · OnePiece · Magic · Entre Otras" },
+    { img: "img/slide-5.jpg",  titulo: "SkinCare Perfecto", texto: "Los mejores productos para tu piel"}
   ],
   // URL CSV de la planilla pública (pestaña Catálogo publicada en la web). Vacío = productos de muestra.
   sheetCsvUrl: ""
