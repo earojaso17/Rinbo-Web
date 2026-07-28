@@ -247,7 +247,7 @@ function cardHTML(p) {
       <div class="card-foto">
         ${v ? '<span class="ribbon-vendido">Vendido</span>' : ""}
         ${!v && enOferta(p) ? '<span class="tag-oferta">Oferta</span>' : ""}
-        ${!v && p.estado ? `<span class="tag-estado">${p.estado}</span>` : ""}
+        ${!v && /usado|semi/i.test(p.estado || "") ? '<span class="tag-estado">Segunda Mano</span>' : ""}
         ${foto ? `<img src="${foto}" alt="${p.nombre}" loading="lazy">` : `<span class="placeholder">${p.id}</span>`}
       </div>
       <div class="card-body">
