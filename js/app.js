@@ -438,9 +438,9 @@ function renderProducto() {
            <p class="producto-precio-nota">Precio final en oferta · impuestos incluidos</p>`
         : `<div class="producto-precio">$${fmtCLP.format(p.precio_clp)} CLP</div>
            <p class="producto-precio-nota">Precio final · impuestos incluidos</p>`}
-      ${p.descripcion ? `<p class="producto-desc">${p.descripcion}</p>` : ""}
+      ${p.descripcion ? `<p class="producto-desc">${conSaltos(p.descripcion)}</p>` : ""}
       ${p.tabla_tallas ? tablaHTML(p.tabla_tallas) : ""}
-      ${p.detalle_pie ? `<p class="detalle-pie">${p.detalle_pie}</p>` : ""}
+      ${p.detalle_pie ? `<p class="detalle-pie">${conSaltos(p.detalle_pie)}</p>` : ""}
       ${opciones.length ? `<div class="opciones">${opciones.map(o => `
         <div>
           <span class="opcion-nombre">${o.nombre}</span>
