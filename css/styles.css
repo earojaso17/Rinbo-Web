@@ -525,7 +525,7 @@ a:focus-visible, button:focus-visible {
 }
 @media (max-width: 760px) {
   .hero { grid-template-columns: 1fr; }
-  .hero-portada { aspect-ratio: 16 / 10; }
+  .hero-portada { aspect-ratio: 1 / 1; }
 }
 
 /* ---------- v3: botón agregar en tarjetas ---------- */
@@ -1104,4 +1104,15 @@ a:focus-visible, button:focus-visible {
   border-color: #E4DDD0;
   color: var(--sumi);
   font-weight: 700;
+}
+
+/* ---------- tarjetas alineadas + nombre a 2 líneas ---------- */
+.card > a { flex: 1 1 auto; display: block; }
+.card-nombre {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.7em;
 }
