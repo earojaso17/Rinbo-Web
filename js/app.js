@@ -252,7 +252,7 @@ function cardHTML(p) {
       </div>
       <div class="card-body">
         <span class="card-cat">${p.categoria_secundaria || p.categoria_principal}</span>
-        <span class="card-nombre">${p.nombre}</span>
+        <span class="card-nombre" title="${String(p.nombre).replace(/"/g, "&quot;")}">${p.nombre}</span>
         ${p.detalle ? `<span class="card-detalle">${p.detalle}</span>` : ""}
         ${precioHTML(p, "card-precio")}
       </div>
