@@ -44,10 +44,12 @@
   <div class="ruta"><span>NGO · Japón</span><span class="linea"></span><span>SCL · Chile</span></div>
 
   <div class="seg-card">
-    <span class="seg-badge">En construcción</span>
-    <input class="seg-input" type="text" value="RIN-0000" disabled aria-label="Código de pedido (próximamente)">
-    <p class="seg-nota">Estamos construyendo el sistema de seguimiento en línea: pronto podrás ingresar tu código y ver cada etapa de tu pedido aquí mismo.</p>
-    <p class="seg-nota">Mientras tanto, consulta el estado por WhatsApp — te respondemos con el detalle al día.</p>
+    <form id="seg-form">
+      <input class="seg-input activo" id="seg-codigo" type="text" placeholder="RIN-0000" autocomplete="off" aria-label="Código de pedido">
+      <button class="btn btn-rojo" type="submit" style="width:100%;justify-content:center">Consultar mi pedido</button>
+    </form>
+    <div id="seg-resultado"></div>
+    <p class="seg-nota" style="margin-top:18px">¿Dudas o no tienes tu código?</p>
     <a class="btn btn-linea" id="seg-wa" href="#" target="_blank" rel="noopener">Consultar por WhatsApp</a>
   </div>
 </main>
