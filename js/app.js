@@ -652,7 +652,7 @@ async function init() {
   if (document.getElementById("producto")) renderProducto();
   const segWa = document.getElementById("seg-wa");
   if (segWa) {
-    const msg = "¡Hola! Quiero saber el estado de mi pedido (código RIN-____)";
+    const msg = "¡Hola! Quiero saber el estado de mi pedido (código R-____)";
     segWa.href = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
   }
     initSeguimiento();
