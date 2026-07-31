@@ -14,7 +14,8 @@ const CONFIG = {
     { img: "img/slide-5.jpg",  titulo: "SkinCare Perfecto", texto: "Los mejores productos para tu piel"}
   ],
   // URL CSV de la planilla pública (pestaña Catálogo publicada en la web). Vacío = productos de muestra.
-  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv"
+  sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv",
+  seguimientoCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=308139092&single=true&output=csv", 
 };
 
 const PRODUCTOS_MUESTRA = [
@@ -543,6 +544,86 @@ function renderDestacados() {
   cont.innerHTML = ds.slice(0, 4).map(cardHTML).join("");
 }
 
+/* ---------- Seguimiento ---------- */
+const ETAPAS = ["Encargo Confirmado", "Comprado en Japón", "En Bodega Japón", "Enviado a Chile", "En Tránsito a Chile", "En Aduana", "En Bodega Chile", "Enviado", "Entregado"];
+const ICONOS = [
+  '<svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 12l2.2 2.2L15.5 9.5"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M6 8h12l-1.2 12H7.2L6 8z"/><path d="M9 8V6.8a3 3 0 0 1 6 0V8"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M4 8l8-4 8 4v8l-8 4-8-4V8z"/><path d="M4 8l8 4 8-4M12 12v8"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M21 3L3 10.5l6.5 2L12 20l3-6.5L21 3z"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M10.5 13.5L3 11l1.5-1.5 6 1 5-5.5 2 .5-3 6.5 4.5 1.5L18 16l-4.5-1-2 3.5H10l1.5-4z"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M8 4h8v6H8z"/><path d="M10 10v3h4v-3M6 17h12M7 21h10M9 17v4M15 17v4"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M3 10l9-6 9 6v10H3z"/><path d="M9 20v-6h6v6"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M3 7h10v9H3zM13 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg>',
+  '<svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6.5 9.5V20h11V9.5"/><path d="M9.5 15l2 2 3.5-3.5"/></svg>'
+];
+
+async function buscarPedido(codigo) {
+  const res = await fetch(CONFIG.seguimientoCsvUrl);
+  const filas = parseCSV(await res.text());
+  const cab = filas[0].map(h => h.trim().toLowerCase());
+  const pedidos = filas.slice(1).map(f => Object.fromEntries(cab.map((h, i) => [h, (f[i] || "").trim()])));
+  return pedidos.find(p => (p.codigo || "").toUpperCase().replace(/\s/g, "") === codigo);
+}
+
+function timelineHTML(p) {
+  const actual = ETAPAS.indexOf(p.etapa);
+  const evid = [p.evidencia_1, p.evidencia_2, p.evidencia_3].filter(Boolean);
+  return `<div class="seg-timeline">
+    <p class="seg-cod">${p.codigo}</p>
+    <div>${ETAPAS.map((e, i) => `
+      <div class="seg-paso ${i < actual ? "hecho" : i === actual ? "actual" : "pendiente"}">
+        <span class="seg-ic">${ICONOS[i]}</span>
+        <span class="seg-txt">${e}${i === actual && p.fecha_etapa ? `<small>${p.fecha_etapa}</small>` : ""}</span>
+      </div>`).join("")}</div>
+    ${p.comentario ? `<p class="seg-comentario">${p.comentario}</p>` : ""}
+    ${evid.length ? `<div class="seg-fotos">${evid.map(f => `<a href="${f}" target="_blank" rel="noopener"><img src="${f}" alt="Evidencia del pedido"></a>`).join("")}</div>` : ""}
+    ${p.comentarios_generales ? `<div class="seg-generales"><p class="seg-generales-titulo">Información de tu pedido</p><p>${p.comentarios_generales}</p></div>` : ""}
+  </div>`;
+}
+
+function initSeguimiento() {
+  const form = document.getElementById("seg-form");
+  if (!form) return;
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const cont = document.getElementById("seg-resultado");
+    const codigo = document.getElementById("seg-codigo").value.toUpperCase().replace(/\s/g, "");
+    if (!codigo) return;
+    cont.innerHTML = '<p class="seg-nota">Buscando…</p>';
+    try {
+      const p = await buscarPedido(codigo);
+      cont.innerHTML = p && ETAPAS.includes(p.etapa)
+        ? timelineHTML(p)
+        : '<p class="seg-nota">No encontramos ese código. Revísalo o escríbenos por WhatsApp.</p>';
+    } catch (err) {
+      cont.innerHTML = '<p class="seg-nota">No pudimos consultar en este momento. Intenta de nuevo o escríbenos por WhatsApp.</p>';
+    }
+  });
+}
+
+/* ---------- Lightbox (zoom de fotos) ---------- */
+function montarLightbox() {
+  document.body.insertAdjacentHTML("beforeend", `
+  <div class="lb" id="lb">
+    <div class="lb-cont"><img id="lb-img" src="" alt="Vista ampliada"></div>
+    <button class="lb-cerrar" id="lb-cerrar" aria-label="Cerrar">×</button>
+  </div>`);
+  const lb = document.getElementById("lb");
+  const img = document.getElementById("lb-img");
+  const abrir = src => { img.src = src; lb.classList.add("abierto"); };
+  const cerrar = () => { lb.classList.remove("abierto"); img.src = ""; };
+  document.addEventListener("click", e => {
+    const ev = e.target.closest(".seg-fotos a");
+    if (ev) { e.preventDefault(); abrir(ev.querySelector("img").src); return; }
+    const pm = e.target.closest(".producto-foto-main img");
+    if (pm) abrir(pm.src);
+  });
+  document.getElementById("lb-cerrar").addEventListener("click", cerrar);
+  lb.addEventListener("click", e => { if (e.target === lb) cerrar(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") cerrar(); });
+}
+
 /* ---------- Init ---------- */
 async function init() {
   if (CONFIG.sheetCsvUrl) {
@@ -550,6 +631,7 @@ async function init() {
     catch (e) { console.error("No se pudo leer la planilla; usando muestra.", e); }
   }
   montarDrawer();
+   montarLightbox();
   Carrito.pintar();
   const mb = document.querySelector(".menu-btn");
   const navP = document.getElementById("nav-principal");
@@ -573,6 +655,7 @@ async function init() {
     const msg = "¡Hola! Quiero saber el estado de mi pedido (código RIN-____)";
     segWa.href = `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(msg)}`;
   }
+    initSeguimiento();
 }
 
 document.addEventListener("DOMContentLoaded", init);
