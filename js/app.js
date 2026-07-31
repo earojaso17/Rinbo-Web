@@ -563,7 +563,7 @@ async function buscarPedido(codigo) {
   const filas = parseCSV(await res.text());
   const cab = filas[0].map(h => h.trim().toLowerCase());
   const pedidos = filas.slice(1).map(f => Object.fromEntries(cab.map((h, i) => [h, (f[i] || "").trim()])));
-  return pedidos.find(p => (p.codigo || "").toUpperCase().replace(/\s/g, "") === codigo);
+  return pedidos.find(p => (p.codigo || "").toUpperCase().replace(/[^A-Z0-9]/g, "") === codigo);
 }
 
 function timelineHTML(p) {
@@ -576,7 +576,7 @@ function timelineHTML(p) {
         <span class="seg-ic">${ICONOS[i]}</span>
         <span class="seg-txt">${e}${i === actual && p.fecha_etapa ? `<small>${p.fecha_etapa}</small>` : ""}</span>
       </div>`).join("")}</div>
-    ${p.comentario ? `<p class="seg-comentario">${p.comentario}</p>` : ""}
+    ${p.comentario ? `<p class="seg-comentario">${conSaltos(p.comentario)}</p>` : ""}
     ${evid.length ? `<div class="seg-fotos">${evid.map(f => `<a href="${f}" target="_blank" rel="noopener"><img src="${f}" alt="Evidencia del pedido"></a>`).join("")}</div>` : ""}
     ${p.comentarios_generales ? `<div class="seg-generales"><p class="seg-generales-titulo">Información de tu pedido</p><p>${p.comentarios_generales}</p></div>` : ""}
   </div>`;
@@ -588,7 +588,7 @@ function initSeguimiento() {
   form.addEventListener("submit", async e => {
     e.preventDefault();
     const cont = document.getElementById("seg-resultado");
-    const codigo = document.getElementById("seg-codigo").value.toUpperCase().replace(/\s/g, "");
+    const codigo = document.getElementById("seg-codigo").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
     if (!codigo) return;
     cont.innerHTML = '<p class="seg-nota">Buscando…</p>';
     try {
