@@ -1155,3 +1155,18 @@ a:focus-visible, button:focus-visible {
 .lb-cont img { display: block; width: 100%; height: auto; max-height: 88vh; object-fit: contain; }
 .lb-cerrar { position: absolute; top: 14px; right: 14px; width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(26,26,26,0.75); color: var(--shiro); font-size: 1.25rem; line-height: 1; cursor: pointer; }
 .lb-cerrar:hover { background: var(--rojo); }
+
+/* ---------- estado de cuenta ---------- */
+.seg-cuenta { border: 1px solid var(--linea); border-radius: 10px; padding: 16px 18px; margin-top: 18px; text-align: left; }
+.seg-cuenta-titulo { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gris); margin: 0 0 12px; }
+.seg-cuenta-fila { display: flex; justify-content: space-between; align-items: baseline; padding: 7px 0; font-size: 0.92rem; border-bottom: 1px solid var(--linea); }
+.seg-cuenta-fila:last-child { border-bottom: none; }
+.seg-cuenta-fila .monto { font-family: var(--mono); font-weight: 700; }
+.seg-cuenta-fila.saldo { padding-top: 12px; }
+.seg-cuenta-fila.saldo span:first-child { font-weight: 700; }
+.seg-cuenta-fila.saldo .monto { color: var(--rojo); font-size: 1.05rem; }
+.seg-cuenta-nota { font-size: 0.78rem; color: var(--gris); margin: 8px 0 0; text-align: left; }
+.seg-pagado { display: flex; align-items: center; gap: 10px; background: #F5F0E8; border: 1px solid #E4DDD0; border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
+.seg-pagado-check { width: 26px; height: 26px; border-radius: 50%; background: var(--sumi); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.seg-pagado-check svg { width: 13px; height: 13px; stroke: var(--shiro); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.seg-pagado span:last-child { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; }
