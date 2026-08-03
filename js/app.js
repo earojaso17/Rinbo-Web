@@ -578,6 +578,7 @@ function timelineHTML(p) {
       </div>`).join("")}</div>
     ${p.comentario ? `<p class="seg-comentario">${conSaltos(p.comentario)}</p>` : ""}
     ${evid.length ? `<div class="seg-fotos">${evid.map(f => `<a href="${f}" target="_blank" rel="noopener"><img src="${f}" alt="Evidencia del pedido"></a>`).join("")}</div>` : ""}
+    ${(() => { const t = parseInt(String(p.total_clp || "").replace(/[^\d]/g, ""), 10) || 0; const a = parseInt(String(p.abonado_clp || "").replace(/[^\d]/g, ""), 10) || 0; if (!t) return ""; const s = t - a; return `<div class="seg-cuenta"><p class="seg-cuenta-titulo">Estado de cuenta</p><div class="seg-cuenta-fila"><span>Valor del pedido</span><span class="monto">$${fmtCLP.format(t)}</span></div><div class="seg-cuenta-fila"><span>Abonado</span><span class="monto">$${fmtCLP.format(a)}</span></div>${s > 0 ? `<div class="seg-cuenta-fila saldo"><span>Saldo por pagar</span><span class="monto">$${fmtCLP.format(s)}</span></div></div><p class="seg-cuenta-nota">El saldo se paga cuando tu pedido llega a Chile — te avisaremos por WhatsApp.</p>` : `<div class="seg-pagado"><span class="seg-pagado-check"><svg viewBox="0 0 24 24"><path d="M5 13l4.5 4.5L19 8"/></svg></span><span>Pedido pagado — ¡gracias!</span></div></div>`}`; })()}
     ${p.comentarios_generales ? `<div class="seg-generales"><p class="seg-generales-titulo">Información de tu pedido</p><p>${p.comentarios_generales}</p></div>` : ""}
   </div>`;
 }
