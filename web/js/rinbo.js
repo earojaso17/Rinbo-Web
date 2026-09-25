@@ -21,7 +21,7 @@ const CONFIG = {
   seguimientoCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=308139092&single=true&output=csv",
   instagram: "https://www.instagram.com/rinbo.store/",
   // ID de medición de Google Analytics 4 (ej. "G-ABC123XYZ"). Vacío = sin Analytics y sin aviso de cookies.
-  ga4: "",
+  ga4: "G-S9EZ38B7C9",
   // Kanji decorativo de cada categoría principal (una categoría nueva usa 品)
   kanjiCategorias: { "Vestuario": "服", "Ropa": "服", "Cartas TCG": "カード", "Segunda mano": "中古", "Relojes": "時計", "Accesorios": "小物", "Coleccionables": "収集", "Tecnología": "技術", "Belleza": "美容" }
 };
