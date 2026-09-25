@@ -93,3 +93,14 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Admin: botón "Publicar cambios ahora" (Cloudflare Pages Function + secreto GITHUB_TOKEN, configurado por el dueño el 2026-09-25 en Production y Preview).
 - [ ] Revisión del dueño en la vista previa y publicación. Desde ese día la planilla deja de editarse (queda de respaldo).
 - Volver atrás: `fuenteCatalogo: "planilla"` en web/js/rinbo.js (+ armar.py) o Revert del PR.
+
+### Fases 5 y 6 (2026-09-25) — rama `claude/fase5-6-pedidos`
+- [x] Migración 5 aplicada (15 pruebas OK): evidencias con link de Drive, contador R00001 que salta al importar, `rinbo.seguimiento_publico` (solo servidor, límite de intentos), `pedidos_resumen` con cliente.
+- [x] Edge Function `seguimiento` publicada (verify_jwt=false); fotos privadas con links temporales de 1 hora.
+- [x] Admin: Pedidos, Clientes, ficha de pedido (etapas, pagos, fotos, artículos, link de seguimiento por WhatsApp) e importación desde SegPublica.
+  Probado contra la base real con un admin temporal (borrado junto con los datos de prueba).
+- [x] Web: seguimiento con código secreto (ej. `K7QMX-4PAR9`) y link directo `rinbo.store/seguimiento.html#CÓDIGO`. Los códigos antiguos `R…` siguen leyendo SegPublica mientras esté publicada.
+- [ ] Dueño: en la Admin, "Traer pedidos que faltan" (SegPublica) → asignar cliente a cada pedido → "Enviar por WhatsApp" su link nuevo.
+- [ ] Cuando todos los clientes activos tengan su link nuevo: `seguimientoCsvUrl: ""` en web/js/rinbo.js (+ armar.py) y despublicar SegPublica
+  (Archivo → Compartir → Publicar en la web → pestaña SegPublica → Dejar de publicar). Volver atrás: publicarla de nuevo y restaurar la URL.
+- Volver atrás de la fase 6 en la web: Revert del PR (la base y la Edge Function pueden quedar; no afectan a la web vieja).

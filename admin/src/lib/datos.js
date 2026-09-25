@@ -1,7 +1,7 @@
 // Todo el acceso a Supabase de RINBŌ Admin está en este archivo.
 // Las tablas viven en el esquema privado "rinbo"; las reglas RLS dejan leer/escribir solo a administradores.
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, PLANILLA_CSV } from "../config.js";
+import { SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, PLANILLA_CSV, SEGUIMIENTO_CSV, SITIO } from "../config.js";
 import { prepararFoto } from "./fotos.js";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, {
@@ -16,6 +16,9 @@ export function mensajeError(e) {
   if (/Invalid login credentials/i.test(m)) return "Correo o contraseña incorrectos.";
   if (/Email not confirmed/i.test(m)) return "El correo aún no está confirmado.";
   if (/duplicate key.*productos_pkey/i.test(m)) return "Ya existe un producto con ese código.";
+  if (/pedidos_codigo_key/i.test(m)) return "Ya existe un pedido con ese código.";
+  if (/pedidos_cliente_id_fkey/i.test(m)) return "Este cliente tiene pedidos: cámbialos de cliente o bórralos primero.";
+  if (/monto_clp_check/i.test(m)) return "El monto no puede ser 0.";
   if (/productos_stock_check/i.test(m)) return "El stock debe ser En Japón, En Chile, Por encargo o Vendido.";
   if (/productos_id_check/i.test(m)) return "El código solo puede tener letras, números, guiones y guion bajo.";
   if (/row-level security|permission denied/i.test(m)) return "No tienes permiso para hacer esto (¿sesión vencida?).";
@@ -191,3 +194,166 @@ async function llamarPublicar(metodo) {
 }
 export const publicarAhora = () => llamarPublicar("POST");
 export const estadoPublicacion = () => llamarPublicar("GET");
+
+// ============================================================
+// Fase 5: clientes y pedidos
+// ============================================================
+export const ETAPAS = ["Encargo Confirmado", "Comprado en Japón", "En Bodega Japón", "Enviado a Chile",
+  "En Tránsito a Chile", "En Aduana", "En Bodega Chile", "Enviado", "Entregado"];
+const EVIDENCIAS = "evidencias";
+const texto = v => { const t = typeof v === "string" ? v.trim() : v; return t === "" || t == null ? null : t; };
+export const aPesos = v => parseInt(String(v ?? "").replace(/[^\d-]/g, ""), 10) || 0;
+// Solo dígitos, con código de país (Chile 56 si viene sin él: 9 1234 5678 → 56912345678)
+export const limpiarWhatsapp = v => {
+  const d = String(v || "").replace(/\D/g, "");
+  return !d ? null : d.length === 9 && d.startsWith("9") ? "56" + d : d;
+};
+
+// ---------- Clientes ----------
+const CAMPOS_CLIENTE = ["nombre", "whatsapp", "instagram", "email", "ciudad", "notas"];
+const limpiarCliente = c => {
+  const r = Object.fromEntries(CAMPOS_CLIENTE.map(k => [k, texto(c[k])]));
+  r.whatsapp = limpiarWhatsapp(r.whatsapp);
+  return r;
+};
+export const listarClientes = () => db().from("clientes").select("*, pedidos(count)").order("nombre").then(ok);
+export const obtenerCliente = id => db().from("clientes").select("*").eq("id", id).maybeSingle().then(ok);
+export const crearCliente = c => db().from("clientes").insert(limpiarCliente(c)).select().single().then(ok);
+export const actualizarCliente = (id, c) => db().from("clientes").update(limpiarCliente(c)).eq("id", id).select().single().then(ok);
+export const borrarCliente = id => db().from("clientes").delete().eq("id", id).then(ok);
+
+// ---------- Pedidos ----------
+export const listarPedidos = ({ clienteId } = {}) => {
+  let q = db().from("pedidos_resumen").select("id, codigo, codigo_seguimiento, cliente_id, cliente_nombre, cliente_whatsapp, etapa, total_clp, abonado_clp, saldo_clp, creado_en, actualizado_en");
+  if (clienteId) q = q.eq("cliente_id", clienteId);
+  return q.order("creado_en", { ascending: false }).then(ok);
+};
+
+const DETALLE = "*, clientes(*), pedido_items(*), pedido_etapas(*), pagos(*), evidencias(*)";
+const ordenarDetalle = p => p && ({
+  ...p,
+  pedido_items: [...p.pedido_items].sort((a, b) => a.id - b.id),
+  pedido_etapas: [...p.pedido_etapas].sort((a, b) => ETAPAS.indexOf(a.etapa) - ETAPAS.indexOf(b.etapa) || a.fecha.localeCompare(b.fecha) || a.id - b.id),
+  pagos: [...p.pagos].sort((a, b) => a.fecha.localeCompare(b.fecha) || a.id - b.id),
+  evidencias: [...p.evidencias].sort((a, b) => a.id - b.id),
+  abonado_clp: p.pagos.reduce((s, x) => s + x.monto_clp, 0)
+});
+export const obtenerPedido = id => db().from("pedidos").select(DETALLE).eq("id", id).maybeSingle().then(ok).then(ordenarDetalle);
+
+const limpiarPedido = p => ({
+  cliente_id: p.cliente_id || null, total_clp: Math.max(0, aPesos(p.total_clp)),
+  comentarios_generales: texto(p.comentarios_generales), notas_internas: texto(p.notas_internas)
+});
+// Pedido nuevo: queda con la primera etapa (Encargo Confirmado) con fecha de hoy
+export async function crearPedido(p) {
+  const nuevo = await db().from("pedidos").insert(limpiarPedido(p)).select("id").single().then(ok);
+  await db().from("pedido_etapas").insert({ pedido_id: nuevo.id, etapa: ETAPAS[0] }).then(ok);
+  return nuevo.id;
+}
+export const actualizarPedido = (id, p) => db().from("pedidos").update(limpiarPedido(p)).eq("id", id).then(ok);
+export async function borrarPedido(p) {
+  const rutas = p.evidencias.map(e => e.ruta).filter(Boolean);
+  await db().from("pedidos").delete().eq("id", p.id).then(ok);
+  if (rutas.length) await supabase.storage.from(EVIDENCIAS).remove(rutas);
+}
+// Código secreto nuevo (si el link se compartió con quien no debía): el link anterior deja de funcionar
+export async function cambiarCodigoSeguimiento(id) {
+  const codigo = await db().rpc("nuevo_codigo_seguimiento").then(ok);
+  await db().from("pedidos").update({ codigo_seguimiento: codigo }).eq("id", id).then(ok);
+  return codigo;
+}
+
+// Artículos
+export const agregarItem = (pedidoId, it) => db().from("pedido_items").insert({
+  pedido_id: pedidoId, producto_id: texto(it.producto_id), descripcion: texto(it.descripcion) || "Artículo",
+  cantidad: Math.max(1, aPesos(it.cantidad)), precio_unitario_clp: Math.max(0, aPesos(it.precio_unitario_clp))
+}).then(ok);
+export const borrarItem = id => db().from("pedido_items").delete().eq("id", id).then(ok);
+
+// Etapas (la etapa actual del pedido la calcula la base: la más avanzada del historial)
+export const agregarEtapa = (pedidoId, e) => db().from("pedido_etapas").insert({
+  pedido_id: pedidoId, etapa: e.etapa, fecha: e.fecha || undefined, comentario: texto(e.comentario), visible_cliente: e.visible_cliente !== false
+}).then(ok);
+export const cambiarEtapa = (id, cambios) => db().from("pedido_etapas").update(cambios).eq("id", id).then(ok);
+export const borrarEtapa = id => db().from("pedido_etapas").delete().eq("id", id).then(ok);
+
+// Pagos (positivo = abono del cliente; negativo = devolución)
+export const agregarPago = (pedidoId, p) => db().from("pagos").insert({
+  pedido_id: pedidoId, fecha: p.fecha || undefined, monto_clp: aPesos(p.monto_clp), medio: texto(p.medio), nota: texto(p.nota)
+}).then(ok);
+export const borrarPago = id => db().from("pagos").delete().eq("id", id).then(ok);
+
+// Evidencias: fotos comprimidas en el bucket privado; la Admin las ve con links temporales
+export async function subirEvidencia(pedidoId, archivo, { visible_cliente = true, pedido_etapa_id = null } = {}) {
+  const f = await prepararFoto(archivo);
+  const ruta = `${pedidoId}/${Date.now().toString(36)}-${azar()}.${f.ext}`;
+  await supabase.storage.from(EVIDENCIAS).upload(ruta, f.grande.blob, { contentType: f.tipo, upsert: false }).then(ok);
+  try {
+    return await db().from("evidencias").insert({ pedido_id: pedidoId, ruta, visible_cliente, pedido_etapa_id, bytes: f.grande.blob.size }).then(ok);
+  } catch (e) { await supabase.storage.from(EVIDENCIAS).remove([ruta]); throw e; }
+}
+export const cambiarEvidencia = (id, cambios) => db().from("evidencias").update(cambios).eq("id", id).then(ok);
+export async function borrarEvidencia(ev) {
+  await db().from("evidencias").delete().eq("id", ev.id).then(ok);
+  if (ev.ruta) await supabase.storage.from(EVIDENCIAS).remove([ev.ruta]);
+}
+export async function urlsEvidencias(lista) {
+  const rutas = lista.map(e => e.ruta).filter(Boolean);
+  const mapa = {};
+  if (rutas.length) {
+    const firmadas = await supabase.storage.from(EVIDENCIAS).createSignedUrls(rutas, 3600).then(ok);
+    for (const x of firmadas) if (x.signedUrl) mapa[x.path] = x.signedUrl;
+  }
+  return Object.fromEntries(lista.map(e => [e.id, e.ruta ? mapa[e.ruta] || "" : fotoDrive(e.url_externa)]));
+}
+const fotoDrive = u => {
+  const m = String(u || "").match(/\/d\/([\w-]+)/) || String(u || "").match(/[?&]id=([\w-]+)/);
+  return m && /google\./.test(u) ? `https://drive.google.com/thumbnail?id=${m[1]}&sz=w800` : u || "";
+};
+
+// Link y mensaje para el cliente
+export const linkSeguimiento = codigo => `${SITIO}/seguimiento.html#${codigo}`;
+export const mensajeSeguimiento = p =>
+  `¡Hola${p.clientes?.nombre ? " " + p.clientes.nombre.split(" ")[0] : ""}! Aquí puedes ver en qué va tu pedido ${p.codigo} de RINBŌ Ichiba:\n${linkSeguimiento(p.codigo_seguimiento)}\n\nTu código de seguimiento es ${p.codigo_seguimiento} (guárdalo, es solo para ti).`;
+export const linkWhatsapp = (numero, mensaje) => `https://wa.me/${limpiarWhatsapp(numero) || ""}?text=${encodeURIComponent(mensaje)}`;
+
+// ---------- Importar pedidos desde SegPublica (una vez, al pasarse a la Admin) ----------
+// Solo agrega los códigos que aún no existen. Cada fila crea: pedido con el mismo código (R00123),
+// su etapa actual con fecha y comentario, el abono como un pago y las fotos de evidencia como links de Drive.
+function aFecha(t) {
+  const s = String(t || "").trim();
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);   // 25/09/2026 (día primero, como en Chile)
+  if (m) return `${m[3].length === 2 ? "20" + m[3] : m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+  return null;
+}
+export async function importarSegPublica() {
+  const res = await fetch(SEGUIMIENTO_CSV, { cache: "no-store" });
+  if (!res.ok) throw new Error("No se pudo leer SegPublica (HTTP " + res.status + ").");
+  const filas = parseCSV(await res.text()).filter(r => r.codigo);
+  const existentes = new Set((await db().from("pedidos").select("codigo").then(ok)).map(p => p.codigo));
+  const r = { total: filas.length, nuevos: 0, yaEstaban: 0, errores: [] };
+  for (const f of filas) {
+    const codigo = f.codigo.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (!codigo) continue;
+    if (existentes.has(codigo)) { r.yaEstaban++; continue; }
+    const etapa = ETAPAS.find(e => sinTildes(e) === sinTildes(f.etapa));
+    try {
+      const p = await db().from("pedidos").insert({
+        codigo, total_clp: nro(f.total_clp), comentarios_generales: texto(f.comentarios_generales),
+        notas_internas: "Importado de SegPublica" + (etapa ? "" : ` (etapa en la planilla: "${f.etapa}")`)
+      }).select("id").single().then(ok);
+      try {
+        const fecha = aFecha(f.fecha_etapa);
+        const comentario = [texto(f.comentario), !fecha && texto(f.fecha_etapa) ? `(fecha: ${f.fecha_etapa})` : null].filter(Boolean).join("\n") || null;
+        await db().from("pedido_etapas").insert({ pedido_id: p.id, etapa: etapa || ETAPAS[0], fecha: fecha || undefined, comentario }).then(ok);
+        if (nro(f.abonado_clp)) await db().from("pagos").insert({ pedido_id: p.id, monto_clp: nro(f.abonado_clp), nota: "Abonado según SegPublica" }).then(ok);
+        const evid = [f.evidencia_1, f.evidencia_2, f.evidencia_3].filter(u => /^https?:\/\//.test(u || ""));
+        if (evid.length) await db().from("evidencias").insert(evid.map(u => ({ pedido_id: p.id, url_externa: u }))).then(ok);
+      } catch (e) { await db().from("pedidos").delete().eq("id", p.id); throw e; }
+      existentes.add(codigo); r.nuevos++;
+    } catch (e) { r.errores.push(`${codigo}: ${mensajeError(e)}`); }
+  }
+  return r;
+}

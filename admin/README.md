@@ -1,11 +1,15 @@
-# admin/ — RINBŌ Admin (fase 3)
+# admin/ — RINBŌ Admin (fases 3 y 5)
 
 App de gestión (Vite + React + supabase-js), pensada primero para celular. No se publica en rinbo.store.
 
 - `src/config.js`: URL de Supabase y llave **publishable** (pública por diseño; los datos los protegen RLS y Cloudflare Access).
 - `src/lib/datos.js`: TODO el acceso a Supabase (esquema `rinbo`). `src/lib/fotos.js`: compresión en el navegador (WebP 1200 y 600 px; JPEG si el navegador no hace WebP; máx. 1 MB).
 - Páginas (`src/paginas/`): Entrar (correo + contraseña; solo cuentas en `rinbo.admins`), Inicio (resumen y espacio del plan gratis, borrar fotos sin uso), Productos (buscar, filtrar, publicar/ocultar), ProductoForm (crear/editar/borrar, fotos: subir, ordenar, borrar).
-- Rutas con `#` (`#/productos/<código>`), así funciona en cualquier hosting estático.
+- Fase 5 (`src/paginas/`): Pedidos (lista con filtros En curso / Con saldo / Entregados), PedidoNuevo (cliente existente o nuevo + total),
+  PedidoDetalle (link y mensaje de seguimiento por WhatsApp, cambiar código secreto, etapas con fecha/comentario/visible, cuenta y pagos,
+  fotos de evidencia privadas con 👁 visible/oculta, artículos, datos e notas internas), Clientes y ClienteForm (con sus pedidos).
+- Inicio: "Traer pedidos que faltan" importa SegPublica una vez (mismo código R…, etapa actual, abonado como pago, fotos como links de Drive).
+- Rutas con `#` (`#/productos/<código>`, `#/pedidos/<id>`, `#/pedidos/nuevo?cliente=<id>`, `#/clientes/<id>`), así funciona en cualquier hosting estático.
 
 ## Probar en el computador
 ```

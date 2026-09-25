@@ -16,7 +16,7 @@ datos/catalogo.json Catálogo que lee rinbo.js (GENERADO por el robot; si no exi
 fotos/<id>/         Fotos de productos en WebP 600/1200 + og-*.jpg (GENERADAS por el robot desde Google Drive)
 feeds/google-merchant.xml  Feed para Google Merchant Center (GENERADO; excluye vendidos y sin precio)
 sitemap.xml, robots.txt    GENERADOS
-seguimiento.html    Consulta de pedido por código (ej. R00123) → línea de tiempo + estado de cuenta
+seguimiento.html    Consulta de pedido por código secreto (ej. K7QMX-4PAR9, o link /seguimiento.html#CÓDIGO) → línea de tiempo + fotos + estado de cuenta
 como-funciona.html, acerca.html, faq.html   Contenido estático
 js/rinbo.js         TODA la lógica (un solo archivo, cargado por todas las páginas). Se edita aquí.
 css/rinbo.css       Todos los estilos. GENERADO: se edita en web-plantillas/css/
@@ -47,7 +47,8 @@ Todo lo HTML de `web/`, `web/css/rinbo.css`, sitemap, robots y feed son **genera
   - `heroSlides`: imagen/título/texto del carrusel de portada.
   - `fuenteCatalogo`: `"supabase"` (fase 4: lo que se edita en la Admin, vía `public.catalogo()` con `supabaseUrl` + `supabaseLlave` publishable) o `"planilla"` (volver atrás a Google Sheets).
   - `sheetCsvUrl`: CSV publicado de la pestaña Catálogo (planilla **RINBO_Publica**; respaldo desde la fase 4).
-  - `seguimientoCsvUrl`: CSV publicado de la pestaña de seguimiento (**SegPublica**), mismo documento, otro `gid`.
+  - `seguimientoApi`: Edge Function `seguimiento` de Supabase (fase 6).
+  - `seguimientoCsvUrl`: CSV de **SegPublica**; solo para códigos antiguos `R…` durante la transición. `""` cuando se despublique.
   - `instagram`, `kanjiCategorias` (kanji decorativo por categoría; las nuevas usan 品).
 - `ga4`: ID de Google Analytics 4. Vacío = sin Analytics y sin aviso de cookies. Con ID: aviso Aceptar/Rechazar (`localStorage` `rinbo_cookies`) y gtag se carga solo si acepta. Eventos: `pedir_cotizacion_whatsapp`, `contacto_whatsapp`, `agregar_cotizacion`, `consultar_pedido`, `clic_instagram`.
 - `cargarCatalogo()` lee `/datos/catalogo.json` y, si no existe, la fuente directa (Supabase `rpc/catalogo` o la planilla, según `fuenteCatalogo`). Si falla, las páginas muestran "No pudimos cargar el catálogo".
@@ -57,6 +58,8 @@ Todo lo HTML de `web/`, `web/css/rinbo.css`, sitemap, robots y feed son **genera
 - `parseCSV()` es un parser propio (maneja comillas y saltos de línea).
 
 ## De dónde vienen los datos
+
+Desde la fase 6 el seguimiento sale de RINBŌ Admin (tablas `pedidos`, `pedido_etapas`, `pagos`, `evidencias`) vía la Edge Function `seguimiento` → `rinbo.seguimiento_publico()`; ver `supabase/README.md`. SegPublica queda solo para códigos antiguos hasta despublicarla.
 
 Desde la fase 4 el catálogo sale de **RINBŌ Admin** (Supabase, tabla `rinbo.productos`): el robot lo lee con `public.catalogo()` (solo publicados) y lo deja en `web/datos/catalogo.json`. La descripción de columnas de abajo sigue valiendo (la función devuelve los mismos nombres). El seguimiento sigue en SegPublica hasta la fase 6. Históricamente ambas fuentes eran Google Sheets "Publicar en la web → CSV".
 
@@ -69,7 +72,7 @@ Columnas usadas: `id, nombre, categoria_principal, categoria_secundaria, detalle
 - Fotos: links de Google Drive se convierten a `drive.google.com/thumbnail?id=…&sz=w<ancho>` (`fotoUrl`; 600 en tarjetas, 1000 en ficha, 1600 al ampliar).
 - `tabla_tallas`: filas separadas por salto de línea o `;`, celdas por `|`; la primera fila es cabecera.
 
-**Seguimiento** (`paginas.seguimiento`): descarga el CSV completo y busca por `codigo` (normalizado a A-Z0-9 en mayúsculas).
+**Seguimiento antiguo** (`paginas.seguimiento`, códigos `R…`, transición): descarga el CSV completo y busca por `codigo` (normalizado a A-Z0-9 en mayúsculas).
 Columnas: `codigo, etapa, fecha_etapa, comentario, evidencia_1..3, total_clp, abonado_clp, comentarios_generales`.
 `etapa` debe coincidir **exactamente** con una de `ETAPAS` en rinbo.js (Encargo Confirmado, Comprado en Japón, En Bodega Japón, Enviado a Chile, En Tránsito a Chile, En Aduana, En Bodega Chile, Enviado, Entregado); si no, el pedido aparece como "no encontrado".
 
@@ -87,14 +90,15 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 ## Supabase (fase 2) — ver `supabase/README.md`
 
 - Proyecto `rinbo` (ref `mgxljvxjonopchpvmjkl`, São Paulo). SQL por Management API (`POST /v1/projects/<ref>/database/query`, token del entorno); la conexión directa a Postgres está bloqueada.
-- Esquema `rinbo`: expuesto en la Data API solo para la Admin, pero `anon` no tiene USAGE (visitantes reciben "permission denied") y RLS es solo-admins; la web solo puede usar `public.catalogo()` y `public.producto()`.
+- Esquema `rinbo`: expuesto en la Data API solo para la Admin, pero `anon` no tiene USAGE (visitantes reciben "permission denied") y RLS es solo-admins; la web solo puede usar `public.catalogo()` y `public.producto()`, más la Edge Function `seguimiento` (`supabase/functions/`).
 - Toda migración: archivo en `supabase/migrations/`, ensayo con pruebas en una transacción que se deshace, y recién ahí aplicar.
 
-## admin/ (fase 3) — ver `admin/README.md`
+## admin/ (fases 3 y 5) — ver `admin/README.md`
 
 - RINBŌ Admin: Vite + React + supabase-js; acceso a datos solo en `admin/src/lib/datos.js` (esquema `rinbo`), compresión de fotos en `admin/src/lib/fotos.js`.
 - Inicio de la Admin: botón "Traer productos que faltan" (importa desde la planilla antigua, en el navegador del dueño, solo los códigos que no existen; opción avanzada para reemplazar). Cada producto publicado tiene link "Ver en rinbo.store".
 - Botón "Publicar cambios ahora" (Inicio y tras guardar): `admin/functions/api/publicar.js` (Cloudflare Pages Function) → `workflow_dispatch` de `pages.yml`; el token de GitHub es el secreto `GITHUB_TOKEN` de Cloudflare, nunca va al navegador.
+- Pedidos y Clientes (fase 5): etapas, pagos, fotos de evidencia (bucket privado), link de seguimiento por WhatsApp; importar SegPublica desde Inicio.
 - Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
 
 ## Convenciones

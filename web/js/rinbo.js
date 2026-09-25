@@ -22,7 +22,10 @@ const CONFIG = {
   supabaseLlave: "sb_publishable_KwzdkIFMqA9ewv9Kg321iw_S6MnaRnd",
   // CSV publicado de la pestaña Catálogo (planilla RINBO_Publica)
   sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv",
-  // CSV publicado de la pestaña de seguimiento (SegPublica), mismo documento
+  // Seguimiento (fase 6): el cliente consulta con su código secreto (ej. K7QMX-4PAR9) en la Edge Function "seguimiento"
+  seguimientoApi: "https://mgxljvxjonopchpvmjkl.supabase.co/functions/v1/seguimiento",
+  // Transición: los códigos antiguos (R00123) se siguen buscando en SegPublica mientras esté publicada.
+  // Cuando se despublique, dejar vacío ("") y esos códigos mostrarán "pide tu código nuevo por WhatsApp".
   seguimientoCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=308139092&single=true&output=csv",
   instagram: "https://www.instagram.com/rinbo.store/",
   // ID de medición de Google Analytics 4 (ej. "G-ABC123XYZ"). Vacío = sin Analytics y sin aviso de cookies.
@@ -514,11 +517,36 @@ const CONFIG = {
       const res = $("#segRes");
       const vacio = `<div class="panel seg-res"><span class="mono" style="color:var(--muted)">Etapas</span><ol class="stages">${ETAPAS.map(s => `<li><span class="d"></span><span>${s}</span><span></span></li>`).join("")}</ol></div>`;
       res.innerHTML = vacio;
-      const buscar = async codigo => (await leerCSV(CONFIG.seguimientoCsvUrl)).find(p => (p.codigo || "").toUpperCase().replace(/[^A-Z0-9]/g, "") === codigo);
+      const fecha = f => /^\d{4}-\d{2}-\d{2}$/.test(f || "") ? f.split("-").reverse().join("-") : f;
+      const msg = t => `<p class="seg-msg">${t}</p>`;
+
+      // Código antiguo (R00123): planilla SegPublica, mientras siga publicada
+      const buscarAntiguo = async codigo => {
+        const p = (await leerCSV(CONFIG.seguimientoCsvUrl)).find(p => (p.codigo || "").toUpperCase().replace(/[^A-Z0-9]/g, "") === codigo);
+        if (!p || !ETAPAS.includes(p.etapa)) return null;
+        return { codigo: p.codigo, etapa: p.etapa, fechas: { [p.etapa]: p.fecha_etapa }, comentario: p.comentario,
+          evid: [p.evidencia_1, p.evidencia_2, p.evidencia_3].filter(Boolean).map(u => ({ mini: fotoUrl(u, 400), grande: fotoUrl(u, 1600), link: u })),
+          total: numero(p.total_clp), abonado: numero(p.abonado_clp), comentarios_generales: p.comentarios_generales };
+      };
+      // Código secreto (K7QMX-4PAR9): RINBŌ Admin vía la Edge Function
+      const buscarNuevo = async codigo => {
+        const r = await fetch(CONFIG.seguimientoApi, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ codigo }) });
+        if (r.status === 404) return null;
+        if (r.status === 429) throw Object.assign(new Error("demasiados"), { demasiados: true });
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const p = await r.json();
+        if (!ETAPAS.includes(p.etapa)) return null;
+        const fechas = {};
+        (p.etapas || []).forEach(e => { fechas[e.etapa] = fecha(e.fecha); });
+        const conNota = (p.etapas || []).filter(e => e.comentario);
+        return { codigo: p.codigo, etapa: p.etapa, fechas, comentario: conNota.length ? conNota[conNota.length - 1].comentario : "",
+          evid: (p.evidencias || []).map(e => ({ mini: fotoUrl(e.url, 400), grande: fotoUrl(e.url, 1600), link: e.url })),
+          total: p.total_clp || 0, abonado: p.abonado_clp || 0, comentarios_generales: p.comentarios_generales };
+      };
+
       const resultado = p => {
         const k = ETAPAS.indexOf(p.etapa);
-        const evid = [p.evidencia_1, p.evidencia_2, p.evidencia_3].filter(Boolean);
-        const total = numero(p.total_clp), abonado = numero(p.abonado_clp), saldo = total - abonado;
+        const total = p.total, abonado = p.abonado, saldo = total - abonado;
         const cuenta = total ? `<div class="account"><b>Estado de cuenta</b><div><span>Valor del pedido</span><span>${fmt(total)}</span></div><div><span>Abonado</span><span>${fmt(abonado)}</span></div>${saldo > 0
           ? `<div class="due"><span>Saldo por pagar</span><span>${fmt(saldo)}</span></div><small>El saldo se paga de acuerdo a lo informado — te avisaremos por WhatsApp.</small>`
           : '<div class="paid"><svg class="i"><use href="#i-check"/></svg><span>Pedido pagado — ¡gracias!</span></div>'}</div>` : "";
@@ -526,27 +554,33 @@ const CONFIG = {
           <div class="seg-top"><span class="seg-code">${esc(p.codigo)}</span><span class="mono num">${k + 1} / ${ETAPAS.length}</span></div>
           <div class="seg-now">${esc(p.etapa)}</div>
           <div class="seg-bar"><span style="transform:scaleX(${(k + 1) / ETAPAS.length})"></span></div>
-          <ol class="stages">${ETAPAS.map((s, n) => `<li class="${n < k ? "done" : n === k ? "now" : ""}"><span class="d">${n < k ? '<svg class="i" style="width:12px;height:12px"><use href="#i-check"/></svg>' : ""}</span><span>${s}</span>${n === k && p.fecha_etapa ? `<time class="num">${esc(p.fecha_etapa)}</time>` : "<span></span>"}</li>`).join("")}</ol>
+          <ol class="stages">${ETAPAS.map((s, n) => `<li class="${n < k ? "done" : n === k ? "now" : ""}"><span class="d">${n < k ? '<svg class="i" style="width:12px;height:12px"><use href="#i-check"/></svg>' : ""}</span><span>${s}</span>${n <= k && p.fechas[s] ? `<time class="num">${esc(p.fechas[s])}</time>` : "<span></span>"}</li>`).join("")}</ol>
           ${p.comentario ? `<p class="seg-note">${saltos(p.comentario)}</p>` : ""}
-          ${evid.length ? `<div class="seg-photos">${evid.map(f => `<a href="${esc(f)}" target="_blank" rel="noopener" data-evid="${esc(fotoUrl(f, 1600))}" aria-label="Ver foto del pedido">${ph(fotoUrl(f, 400), "写", "Evidencia del pedido")}</a>`).join("")}</div>` : ""}
+          ${p.evid.length ? `<div class="seg-photos">${p.evid.map(f => `<a href="${esc(f.link)}" target="_blank" rel="noopener" data-evid="${esc(f.grande)}" aria-label="Ver foto del pedido">${ph(f.mini, "写", "Evidencia del pedido")}</a>`).join("")}</div>` : ""}
           ${cuenta}
           ${p.comentarios_generales ? `<div class="seg-info"><b>Información de tu pedido</b><p>${saltos(p.comentarios_generales)}</p></div>` : ""}
         </div>`;
       };
       res.addEventListener("click", e => { const a = e.target.closest("[data-evid]"); if (a) { e.preventDefault(); lightbox(a.dataset.evid, "写"); } });
-      $("#segForm").addEventListener("submit", async e => {
-        e.preventDefault();
+
+      const consultar = async () => {
         const c = $("#segCode").value.toUpperCase().replace(/[^A-Z0-9]/g, "");
         if (!c) { $("#segCode").focus(); return; }
-        res.innerHTML = '<p class="seg-msg">Buscando…</p>';
+        const antiguo = /^R\d+$/.test(c);
+        if (antiguo && !CONFIG.seguimientoCsvUrl) { res.innerHTML = msg("Los códigos de seguimiento cambiaron: el nuevo tiene 10 letras y números (ej. K7QMX-4PAR9). Pídelo por WhatsApp y te lo enviamos."); return; }
+        res.innerHTML = msg("Buscando…");
         try {
-          const p = await buscar(c);
-          medir("consultar_pedido", { encontrado: !!(p && ETAPAS.includes(p.etapa)) });
-          res.innerHTML = p && ETAPAS.includes(p.etapa) ? resultado(p) : '<p class="seg-msg">No encontramos ese código. Revísalo o escríbenos por WhatsApp.</p>';
+          const p = antiguo ? await buscarAntiguo(c) : c.length === 10 ? await buscarNuevo(c) : null;
+          medir("consultar_pedido", { encontrado: !!p });
+          res.innerHTML = p ? resultado(p) : msg("No encontramos ese código. Revísalo o escríbenos por WhatsApp.");
         } catch (err) {
-          res.innerHTML = '<p class="seg-msg">No pudimos consultar en este momento. Intenta de nuevo o escríbenos por WhatsApp.</p>';
+          res.innerHTML = msg(err.demasiados ? "Demasiados intentos. Espera unos minutos o escríbenos por WhatsApp." : "No pudimos consultar en este momento. Intenta de nuevo o escríbenos por WhatsApp.");
         }
-      });
+      };
+      $("#segForm").addEventListener("submit", e => { e.preventDefault(); consultar(); });
+      // Link directo que envía la tienda: /seguimiento.html#K7QMX-4PAR9 (después del # no llega a Google Analytics)
+      const enLink = decodeURIComponent(location.hash.slice(1)).trim();
+      if (/^[A-Za-z0-9-]{6,20}$/.test(enLink)) { $("#segCode").value = enLink.toUpperCase(); consultar(); }
     },
 
     faq() {
