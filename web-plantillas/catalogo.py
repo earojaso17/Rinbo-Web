@@ -22,7 +22,7 @@ WEB = AQUI.parent / 'web'
 JSON_CATALOGO = WEB / 'datos' / 'catalogo.json'
 ESTADO = AQUI / 'estado-catalogo.json'
 FOTOS = WEB / 'fotos'
-TAM_CHICA, TAM_GRANDE = 600, 1200
+TAM_CHICA, TAM_GRANDE, TAM_OG = 600, 1200, 1080
 
 
 def slug(s):
@@ -105,7 +105,7 @@ def convertir_foto(origen, carpeta, es_primera, estado_fotos):
     """Descarga una foto y la guarda en WebP (600 y 1200 de ancho). Devuelve {m, g, w, h} o None si falla."""
     from PIL import Image  # solo se necesita al actualizar
     h = huella_texto(origen)
-    chica, grande, og = carpeta / f'{h}-{TAM_CHICA}.webp', carpeta / f'{h}-{TAM_GRANDE}.webp', carpeta / f'og-{h}.jpg'
+    chica, grande, og = carpeta / f'{h}-{TAM_CHICA}.webp', carpeta / f'{h}-{TAM_GRANDE}.webp', carpeta / f'og2-{h}.jpg'
     clave = f'{carpeta.name}|{origen}'
     previo = estado_fotos.get(clave)
     if previo and chica.exists() and grande.exists() and (not es_primera or og.exists()):
@@ -130,11 +130,12 @@ def convertir_foto(origen, carpeta, es_primera, estado_fotos):
         if ancho == TAM_GRANDE:
             res['w'], res['h'] = copia.width, copia.height
     if es_primera:
-        fondo = Image.new('RGB', im.size, 'white')
-        fondo.paste(im, mask=im.split()[-1] if im.mode == 'RGBA' else None)
-        if fondo.width > TAM_GRANDE:
-            fondo = fondo.resize((TAM_GRANDE, round(fondo.height * TAM_GRANDE / fondo.width)), Image.LANCZOS)
-        fondo.save(og, 'JPEG', quality=82, optimize=True, progressive=True)
+        # Foto para compartir: cuadrada (WhatsApp recorta a cuadrado), producto completo al centro sobre blanco, liviana
+        lado = max(im.size)
+        fondo = Image.new('RGB', (lado, lado), 'white')
+        fondo.paste(im, ((lado - im.width) // 2, (lado - im.height) // 2), im if im.mode == 'RGBA' else None)
+        fondo = fondo.resize((TAM_OG, TAM_OG), Image.LANCZOS)
+        fondo.save(og, 'JPEG', quality=80, optimize=True, progressive=True)
     base = f'/fotos/{carpeta.name}/'
     res.update({'m': base + chica.name, 'g': base + grande.name, 'og': base + og.name if es_primera else ''})
     estado_fotos[clave] = res

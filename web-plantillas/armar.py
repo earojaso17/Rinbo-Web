@@ -9,6 +9,7 @@
 # y css/rinbo.css. A rinbo.css, rinbo.js y og-card.jpg les agrega ?v=<huella> para evitar versiones viejas en caché.
 import datetime
 import hashlib
+import os
 import html
 import json
 import pathlib
@@ -23,6 +24,9 @@ SITIO = 'https://rinbo.store'
 # Código de verificación de Google Search Console (solo si Google lo pide con "etiqueta HTML").
 # Hoy el dominio ya está verificado por DNS (registro TXT en Wix), así que puede quedar vacío.
 SEARCH_CONSOLE = ''
+# Dirección desde donde WhatsApp/Facebook descargan la foto de cada producto. En producción = SITIO;
+# en una rama de prueba el robot la cambia a su vista previa de Cloudflare (variable OG_BASE) para poder probarla.
+OG_BASE = os.environ.get('OG_BASE', '').rstrip('/') or SITIO
 # -----------------------------------
 
 AQUI = pathlib.Path(__file__).parent
@@ -521,7 +525,7 @@ def paginas_producto(P, defs, estado):
 </main>'''
         desc = recortar(f"{p['nombre']}. {p['desc'] or p['detalle']}" if (p['desc'] or p['detalle']) else f"{p['nombre']}. Comprado en persona en Japón, con precio final en CLP.")
         f0 = p['fotos'][0] if p['fotos'] else None
-        og = (SITIO + p['og'], None, None) if p.get('og') else ((foto_src(f0, True), None, None) if f0 else None)
+        og = (OG_BASE + p['og'], 1080, 1080) if p.get('og') else ((foto_src(f0, True), None, None) if f0 else None)
         migas_ld = [('Inicio', '/'), ('Tienda', '/tienda.html')] + ([(p['cat'], url_cat(p['cat']))] if p['cat'] else []) + [(p['nombre'], url_prod(p))]
         pagina(f"producto/{p['slug']}/index.html", titulo=f"{p['nombre']} — {NOMBRE}", desc=desc, canonical=SITIO + url_prod(p),
                main=main, nav_actual='tienda.html', og_img=og, og_tipo='product', jsonld=[ld_producto(p), ld_migas(migas_ld)], defs=defs)
