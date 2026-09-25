@@ -24,9 +24,9 @@ const CONFIG = {
   sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv",
   // Seguimiento (fase 6): el cliente consulta con su código secreto (ej. K7QMX-4PAR9) en la Edge Function "seguimiento"
   seguimientoApi: "https://mgxljvxjonopchpvmjkl.supabase.co/functions/v1/seguimiento",
-  // Transición: los códigos antiguos (R00123) se siguen buscando en SegPublica mientras esté publicada.
-  // Cuando se despublique, dejar vacío ("") y esos códigos mostrarán "pide tu código nuevo por WhatsApp".
-  seguimientoCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=308139092&single=true&output=csv",
+  // Códigos antiguos (R00123) de la planilla SegPublica: ya no se usan (despublicada el 2026-09-25).
+  // Con "" esos códigos muestran "pide tu código nuevo por WhatsApp".
+  seguimientoCsvUrl: "",
   instagram: "https://www.instagram.com/rinbo.store/",
   // ID de medición de Google Analytics 4 (ej. "G-ABC123XYZ"). Vacío = sin Analytics y sin aviso de cookies.
   ga4: "G-S9EZ38B7C9",

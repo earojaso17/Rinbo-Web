@@ -278,8 +278,11 @@ function Articulos({ p, productos, sumaItems, hacer }) {
 
 // ---------- Datos generales ----------
 function Datos({ p, clientes, hacer }) {
-  const [f, setF] = useState({ cliente_id: p.cliente_id || "", total_clp: String(p.total_clp), comentarios_generales: p.comentarios_generales || "", notas_internas: p.notas_internas || "" });
-  useEffect(() => { setF({ cliente_id: p.cliente_id || "", total_clp: String(p.total_clp), comentarios_generales: p.comentarios_generales || "", notas_internas: p.notas_internas || "" }); }, [p]);
+  const inicial = () => ({ cliente_id: p.cliente_id || "", total_clp: String(p.total_clp), costo_clp: p.costo_clp ? String(p.costo_clp) : "",
+    impuestos_clp: p.impuestos_clp ? String(p.impuestos_clp) : "", comentarios_generales: p.comentarios_generales || "", notas_internas: p.notas_internas || "" });
+  const [f, setF] = useState(inicial);
+  useEffect(() => { setF(inicial()); }, [p]);
+  const venta = aPesos(f.total_clp), utilidad = venta - aPesos(f.costo_clp) - aPesos(f.impuestos_clp);
   const cambiar = k => e => setF(x => ({ ...x, [k]: e.target.value }));
   return (
     <form className="tarjeta" onSubmit={e => { e.preventDefault(); hacer(() => actualizarPedido(p.id, f), "Guardado."); }}>
@@ -291,7 +294,19 @@ function Datos({ p, clientes, hacer }) {
         </select>
         <small><a href="#/clientes/nuevo">+ Crear cliente</a> (luego vuelve y elígelo)</small>
       </label>
-      <label className="campo">Valor total (CLP)<input inputMode="numeric" value={f.total_clp} onChange={cambiar("total_clp")} /></label>
+      <fieldset className="control">
+        <legend>Mi control <small>(el cliente solo ve el precio de venta)</small></legend>
+        <label className="campo">Precio de venta (CLP)<input inputMode="numeric" value={f.total_clp} onChange={cambiar("total_clp")} />
+          <small>Es el "Valor del pedido" que ve el cliente.</small></label>
+        <div className="dos">
+          <label className="campo">Costo del producto<input inputMode="numeric" value={f.costo_clp} onChange={cambiar("costo_clp")} placeholder="CLP" /></label>
+          <label className="campo">Impuestos pagados<input inputMode="numeric" value={f.impuestos_clp} onChange={cambiar("impuestos_clp")} placeholder="CLP" /></label>
+        </div>
+        <div className={"utilidad num" + (utilidad < 0 ? " perdida" : "")}>
+          <span>Utilidad</span>
+          <b>{fmt(utilidad)}{venta > 0 && <small> · {Math.round(utilidad / venta * 100)}%</small>}</b>
+        </div>
+      </fieldset>
       <label className="campo">Información para el cliente<textarea rows="3" value={f.comentarios_generales} onChange={cambiar("comentarios_generales")} />
         <small>Se ve en el seguimiento.</small></label>
       <label className="campo">Notas internas<textarea rows="3" value={f.notas_internas} onChange={cambiar("notas_internas")} />

@@ -39,3 +39,4 @@ No se publica en ningún sitio web.
 | 20260925000003 | funciones públicas del catálogo | `pruebas/02_almacenamiento_y_catalogo.sql` (12 OK) |
 | 20260925000004 | ordenar fotos (`rinbo.ordenar_fotos`) | `pruebas/03_ordenar_fotos.sql` (3 OK) |
 | 20260925000005 | pedidos y seguimiento público (evidencias con link, contador R, `seguimiento_publico`, límite de intentos) | `pruebas/04_pedidos_y_seguimiento.sql` (15 OK) |
+| 20260925000006 | control de utilidad: `pedidos.costo_clp`, `impuestos_clp`; `pedidos_resumen.utilidad_clp` (privado) | `pruebas/05_control_utilidad.sql` (4 OK) |

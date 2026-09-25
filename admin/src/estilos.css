@@ -189,3 +189,15 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--ai); outlin
   box-shadow: 0 8px 24px rgba(0,0,0,.12); justify-content: center; font-weight: 600; }
 .campo.corto:has(input[type=date]) { max-width: 200px; }
 @media (min-width: 720px) { .aviso.flotante { bottom: 104px; } }
+.control { margin: 0; border: 0; padding: 12px; border-radius: 12px; background: var(--tint); display: grid; gap: 10px; }
+.control legend { float: left; width: 100%; padding: 0; font-weight: 700; font-size: .92rem; }
+.control legend small { font-weight: 400; color: var(--muted); }
+.utilidad { display: flex; justify-content: space-between; align-items: baseline; padding-top: 8px; border-top: 1px solid var(--line); color: var(--ok); }
+.utilidad b { font-size: 1.2rem; }
+.utilidad small { font-size: .8rem; font-weight: 500; }
+.utilidad.perdida, .resumen-utilidad .perdida { color: var(--ai); }
+.etiqueta.gana { background: #e8f3ec; color: var(--ok); }
+.resumen-utilidad { gap: 2px; }
+.resumen-utilidad span { color: var(--muted); font-size: .85rem; }
+.resumen-utilidad b { font-family: var(--f-display); font-size: 1.6rem; color: var(--ok); }
+.resumen-utilidad small { color: var(--muted); font-size: .8rem; }
