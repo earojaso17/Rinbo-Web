@@ -28,6 +28,11 @@ No se publica en ningún sitio web.
   marcadas visibles, total/abonado y comentarios generales (nunca notas internas ni datos del cliente), y limita a 10 códigos
   equivocados por IP cada 15 min (`rinbo.consultas_seguimiento`, se borra a los 2 días). Las fotos del bucket privado salen
   como links temporales de 1 hora; las importadas de SegPublica (`evidencias.url_externa`) son los links de Drive de siempre.
+- WhatsApp (fase 8): YCloud (coexistencia con la app WhatsApp Business) avisa a la Edge Function `whatsapp-webhook`
+  (`verify_jwt=false`), que exige la firma `YCloud-Signature` (HMAC-SHA256 de `"<t>.<cuerpo>"` con el secreto
+  `YCLOUD_WEBHOOK_SECRET`, configurado por el dueño en Supabase → Edge Functions → Secrets) y guarda cada mensaje una vez
+  (`wamid` único). Entrante/saliente según el número de la tienda (`TIENDA_WHATSAPP`, por defecto 819039343820).
+  Fotos/audios no se descargan (solo el tipo y el texto o pie de foto). Publicar: igual que `seguimiento`, con `slug=whatsapp-webhook`.
 - Códigos de pedido: `R00001…` automáticos; al importar `R00127` el contador salta solo (trigger `ajustar_contador_pedidos`).
 - Auth: registros abiertos desactivados (`disable_signup = true`). Los usuarios se crean solo desde el panel de Supabase.
 
@@ -40,3 +45,4 @@ No se publica en ningún sitio web.
 | 20260925000004 | ordenar fotos (`rinbo.ordenar_fotos`) | `pruebas/03_ordenar_fotos.sql` (3 OK) |
 | 20260925000005 | pedidos y seguimiento público (evidencias con link, contador R, `seguimiento_publico`, límite de intentos) | `pruebas/04_pedidos_y_seguimiento.sql` (15 OK) |
 | 20260925000006 | control de utilidad: `pedidos.costo_clp`, `impuestos_clp`; `pedidos_resumen.utilidad_clp` (privado) | `pruebas/05_control_utilidad.sql` (4 OK) |
+| 20260925000007 | bandeja WhatsApp: `whatsapp_mensajes` (admins solo leen/borran; escribe el servidor) + vista `whatsapp_conversaciones` | `pruebas/06_whatsapp_mensajes.sql` (6 OK) |

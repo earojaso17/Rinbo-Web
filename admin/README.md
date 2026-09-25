@@ -8,7 +8,8 @@ App de gestión (Vite + React + supabase-js), pensada primero para celular. No s
 - Fase 5 (`src/paginas/`): Pedidos (lista con filtros En curso / Con saldo / Entregados), PedidoNuevo (cliente existente o nuevo + total),
   PedidoDetalle (link y mensaje de seguimiento por WhatsApp, cambiar código secreto, etapas con fecha/comentario/visible, cuenta y pagos,
   fotos de evidencia privadas con 👁 visible/oculta, artículos, datos y notas internas, "Mi control": precio de venta, costo, impuestos y utilidad calculada; la lista suma la utilidad), Clientes y ClienteForm (con sus pedidos).
-- Rutas con `#` (`#/productos/<código>`, `#/pedidos/<id>`, `#/pedidos/nuevo?cliente=<id>`, `#/clientes/<id>`), así funciona en cualquier hosting estático.
+- Fase 8: Mensajes (bandeja de WhatsApp, solo lectura; "Sin leer" se recuerda en el navegador) y Chat (burbujas por día, "Crear cliente" con el número y nombre de WhatsApp, "Ver cliente y pedidos"). La ficha del cliente tiene "Ver mensajes".
+- Rutas con `#` (`#/productos/<código>`, `#/pedidos/<id>`, `#/pedidos/nuevo?cliente=<id>`, `#/clientes/<id>`, `#/clientes/nuevo?whatsapp=…&nombre=…`, `#/mensajes/<teléfono>`), así funciona en cualquier hosting estático.
 
 ## Probar en el computador
 ```
