@@ -84,3 +84,4 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Esquema `rinbo` expuesto en la Data API (lo hizo el dueño, opción A). Verificado: anon recibe "permission denied for schema rinbo" en tablas, inserción y funciones; `rpc/catalogo` sigue respondiendo.
 - [ ] Cloudflare Pages "rinbo-admin" + Cloudflare Access (dueño, con guía).
 - [ ] Prueba real con la cuenta hola@rinbo.store.
+- [x] Catálogo publicado importado a Supabase (15 productos, 78 fotos como links de Drive) con `supabase/importar/desde_catalogo_web.py`. Es una COPIA: la web sigue leyendo la planilla hasta la fase 4. Los productos no publicados de la planilla no se importaron.
