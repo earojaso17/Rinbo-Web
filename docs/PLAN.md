@@ -82,6 +82,6 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Migración 4: `rinbo.ordenar_fotos()` (reordenar fotos en un paso; 3 pruebas OK).
 - [x] App `admin/` (Vite + React): entrar, inicio con espacio del plan gratis, productos (buscar, filtrar, publicar), ficha (todos los campos de la planilla + marca), fotos (compresión en el navegador, ordenar, borrar). Probada con una base simulada.
 - [x] Esquema `rinbo` expuesto en la Data API (lo hizo el dueño, opción A). Verificado: anon recibe "permission denied for schema rinbo" en tablas, inserción y funciones; `rpc/catalogo` sigue respondiendo.
-- [ ] Cloudflare Pages "rinbo-admin" + Cloudflare Access (dueño, con guía).
-- [ ] Prueba real con la cuenta hola@rinbo.store.
+- [x] Cloudflare Pages "rinbo-admin" (raíz `admin`, `npm run build`, `dist`, NODE_VERSION 22) + Cloudflare Access: app self-hosted `rinbo-admin.pages.dev` y `*.rinbo-admin.pages.dev`, política "Solo dueño" (emails hola@rinbo.store y la cuenta Gmail del dueño; entra con "Cloudflare"). Sesión 1 semana.
+- [x] Prueba real con la cuenta hola@rinbo.store en la vista previa (entrar, productos importados).
 - [x] Catálogo publicado importado a Supabase (15 productos, 78 fotos como links de Drive) con `supabase/importar/desde_catalogo_web.py`. Es una COPIA: la web sigue leyendo la planilla hasta la fase 4. Los productos no publicados de la planilla no se importaron.
