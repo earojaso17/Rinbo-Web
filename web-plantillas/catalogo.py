@@ -78,15 +78,20 @@ def leer_csv(url):
 
 
 def normalizar(r):
+    r = {k: ('' if v is None else v) for k, v in r.items()}
+    if isinstance(r.get('fotos'), list):  # desde Supabase: [{m, g, w, h}] (bucket) o [{url}] (Drive)
+        origen = [f.get('g') or f.get('url') for f in r['fotos'] if f.get('g') or f.get('url')]
+    else:                                 # desde la planilla: foto_1 … foto_12
+        origen = [r.get(f'foto_{i}', '') for i in range(1, 13) if r.get(f'foto_{i}', '')]
     return {
         'id': r['id'], 'nombre': r['nombre'], 'cat': r.get('categoria_principal', ''), 'sub': r.get('categoria_secundaria', ''),
         'detalle': r.get('detalle', ''), 'ops': [o for o in (opcion(r.get('opcion_1')), opcion(r.get('opcion_2'))) if o],
         'desc': r.get('descripcion', ''), 'estado': r.get('estado', ''), 'precio': numero(r.get('precio_clp')),
         'oferta': numero(r.get('precio_oferta')), 'stock': r.get('stock', ''),
-        'destacado': r.get('destacado', '').upper() == 'SI', 'tabla': r.get('tabla_tallas', ''), 'pie': r.get('detalle_pie', ''),
+        'destacado': r.get('destacado') is True or str(r.get('destacado', '')).upper() == 'SI', 'tabla': r.get('tabla_tallas', ''), 'pie': r.get('detalle_pie', ''),
         'ig': r.get('instagram', '') if re.match(r'https?://', r.get('instagram', '')) else '',
         'marca': r.get('marca', ''),
-        'fotos_origen': [r.get(f'foto_{i}', '') for i in range(1, 13) if r.get(f'foto_{i}', '')],
+        'fotos_origen': origen,
     }
 
 
@@ -163,13 +168,27 @@ def asignar_slugs(productos, estado):
             del estado['slugs_antiguos'][s]
 
 
+def leer_supabase():
+    """Productos publicados desde la Admin (public.catalogo(), con la llave pública; no necesita secretos)."""
+    req = urllib.request.Request(config_js('supabaseUrl') + '/rest/v1/rpc/catalogo', data=b'{}', method='POST',
+                                 headers={'apikey': config_js('supabaseLlave'), 'Content-Type': 'application/json',
+                                          'User-Agent': 'rinbo.store robot'})
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.loads(r.read().decode('utf-8'))
+
+
 def actualizar():
-    """Descarga la planilla y las fotos y reescribe web/datos/catalogo.json. Devuelve la lista de productos."""
-    url = config_js('sheetCsvUrl')
-    filas = leer_csv(url)
-    productos = [normalizar(r) for r in filas if r.get('id') and r.get('nombre') and r.get('publicado', '').upper() == 'SI']
+    """Descarga el catálogo (Supabase o planilla, según CONFIG.fuenteCatalogo) y las fotos, y reescribe
+    web/datos/catalogo.json. Devuelve la lista de productos."""
+    fuente = config_js('fuenteCatalogo') or 'planilla'
+    if fuente == 'supabase':
+        productos = [normalizar(r) for r in leer_supabase() if r.get('id') and r.get('nombre')]
+    else:
+        filas = leer_csv(config_js('sheetCsvUrl'))
+        productos = [normalizar(r) for r in filas if r.get('id') and r.get('nombre') and r.get('publicado', '').upper() == 'SI']
+    print(f'Fuente del catálogo: {fuente}')
     if not productos:
-        raise RuntimeError('La planilla no devolvió productos publicados (¿error de Google?). No se cambia nada.')
+        raise RuntimeError(f'La fuente ({fuente}) no devolvió productos publicados. No se cambia nada.')
     ids = [p['id'] for p in productos]
     if len(ids) != len(set(ids)):
         dup = sorted({i for i in ids if ids.count(i) > 1})

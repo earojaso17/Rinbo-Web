@@ -1,7 +1,7 @@
 // Todo el acceso a Supabase de RINBŌ Admin está en este archivo.
 // Las tablas viven en el esquema privado "rinbo"; las reglas RLS dejan leer/escribir solo a administradores.
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_LLAVE_PUBLICA } from "../config.js";
+import { SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, PLANILLA_CSV } from "../config.js";
 import { prepararFoto } from "./fotos.js";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, {
@@ -107,3 +107,74 @@ export async function borrarFoto(productoId, foto, restantes) {
 }
 
 export const ordenar = (productoId, ids) => db().rpc("ordenar_fotos", { p_producto_id: productoId, p_ids: ids }).then(ok);
+
+// ---------- Importar desde la planilla de Google (transición a la Admin) ----------
+function parseCSV(text) {
+  const filas = []; let fila = [], campo = "", comillas = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (comillas) {
+      if (c === '"' && text[i + 1] === '"') { campo += '"'; i++; } else if (c === '"') comillas = false; else campo += c;
+    } else if (c === '"') comillas = true;
+    else if (c === ",") { fila.push(campo); campo = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; fila.push(campo); filas.push(fila); fila = []; campo = ""; }
+    else campo += c;
+  }
+  if (campo !== "" || fila.length) { fila.push(campo); filas.push(fila); }
+  const cab = (filas[0] || []).map(h => h.trim().toLowerCase());
+  return filas.slice(1).map(f => Object.fromEntries(cab.map((h, i) => [h, (f[i] || "").trim()])));
+}
+const STOCKS = ["En Japón", "En Chile", "Por encargo", "Vendido"];
+const sinTildes = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const nro = s => parseInt(String(s || "").replace(/\D/g, ""), 10) || 0;
+
+function deFila(r, orden) {
+  const stock = STOCKS.find(s => sinTildes(s) === sinTildes(r.stock)) || "En Japón";
+  const oferta = nro(r.precio_oferta);
+  return {
+    producto: {
+      id: r.id, nombre: r.nombre, categoria_principal: r.categoria_principal || null, categoria_secundaria: r.categoria_secundaria || null,
+      detalle: r.detalle || null, marca: r.marca || null, opcion_1: r.opcion_1 || null, opcion_2: r.opcion_2 || null,
+      descripcion: r.descripcion || null, estado: r.estado || "Nuevo", precio_clp: nro(r.precio_clp), precio_oferta: oferta || null,
+      stock, publicado: String(r.publicado).toUpperCase() === "SI", destacado: String(r.destacado).toUpperCase() === "SI",
+      tabla_tallas: r.tabla_tallas || null, detalle_pie: r.detalle_pie || null,
+      instagram: /^https?:\/\//.test(r.instagram || "") ? r.instagram : null, orden
+    },
+    fotos: Array.from({ length: 12 }, (_, i) => r["foto_" + (i + 1)]).filter(Boolean).map((u, i) => ({ producto_id: r.id, posicion: i + 1, url_externa: u }))
+  };
+}
+
+// sobrescribir = false: solo agrega los productos que no existen en la Admin.
+// sobrescribir = true: además reemplaza los datos de los existentes con los de la planilla (y sus fotos,
+// salvo en productos que ya tengan fotos subidas desde la Admin).
+export async function importarPlanilla({ sobrescribir = false } = {}) {
+  const res = await fetch(PLANILLA_CSV, { cache: "no-store" });
+  if (!res.ok) throw new Error("No se pudo leer la planilla (HTTP " + res.status + ").");
+  const filas = parseCSV(await res.text()).filter(r => r.id && r.nombre);
+  const existentes = await db().from("productos").select("id, orden, producto_fotos(ruta)").then(ok);
+  const mapa = new Map(existentes.map(p => [p.id, p]));
+  let ordenNuevo = Math.max(0, ...existentes.map(p => p.orden || 0)) + 1;
+  const r = { nuevos: 0, actualizados: 0, sinCambios: 0, errores: [], total: filas.length };
+  for (const fila of filas) {
+    const existe = mapa.get(fila.id);
+    const { producto, fotos } = deFila(fila, existe ? existe.orden : ordenNuevo++);
+    try {
+      if (!existe) {
+        await db().from("productos").insert(producto).then(ok);
+        if (fotos.length) await db().from("producto_fotos").insert(fotos).then(ok);
+        r.nuevos++;
+      } else if (sobrescribir) {
+        await db().from("productos").update(producto).eq("id", producto.id).then(ok);
+        if (!existe.producto_fotos.some(f => f.ruta)) {
+          await db().from("producto_fotos").delete().eq("producto_id", producto.id).then(ok);
+          if (fotos.length) await db().from("producto_fotos").insert(fotos).then(ok);
+        }
+        r.actualizados++;
+      } else r.sinCambios++;
+    } catch (e) { r.errores.push(`${producto.id}: ${mensajeError(e)}`); }
+  }
+  return r;
+}
+
+// Dirección del producto en rinbo.store (misma regla que el robot: nombre sin tildes, en minúsculas y con guiones)
+export const urlEnLaWeb = nombre => "https://rinbo.store/producto/" + sinTildes(nombre).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "/";

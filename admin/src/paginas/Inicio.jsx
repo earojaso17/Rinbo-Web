@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { usoAlmacenamiento, borrarArchivosHuerfanos, mensajeError } from "../lib/datos.js";
+import { usoAlmacenamiento, borrarArchivosHuerfanos, importarPlanilla, mensajeError } from "../lib/datos.js";
 
 const mb = b => (b / 1024 / 1024).toLocaleString("es-CL", { maximumFractionDigits: b < 10 * 1024 * 1024 ? 1 : 0 }) + " MB";
 
@@ -19,6 +19,17 @@ export default function Inicio({ correo }) {
   const [error, setError] = useState("");
   const [limpiando, setLimpiando] = useState(false);
   const [aviso, setAviso] = useState("");
+
+  const [importando, setImportando] = useState(false);
+  const [resultado, setResultado] = useState(null);
+
+  async function importar(sobrescribir) {
+    if (sobrescribir && !confirm("Esto reemplaza los datos de los productos de la Admin con los de la planilla (tus cambios hechos en la Admin se pierden). ¿Seguir?")) return;
+    setImportando(true); setResultado(null); setError("");
+    try { setResultado(await importarPlanilla({ sobrescribir })); await cargar(); }
+    catch (e) { setError(mensajeError(e)); }
+    setImportando(false);
+  }
 
   const cargar = () => usoAlmacenamiento().then(setUso).catch(e => setError(mensajeError(e)));
   useEffect(() => { cargar(); }, []);
@@ -60,6 +71,22 @@ export default function Inicio({ correo }) {
             {aviso && <p className="aviso ok">{aviso}</p>}
           </section>
           <a className="btn principal ancho" href="#/productos/nuevo">+ Nuevo producto</a>
+          <section className="tarjeta">
+            <h2 className="subtitulo">Planilla de Google</h2>
+            <p className="ayuda">Trae a la Admin los productos de tu planilla antigua que todavía no están aquí (también los no publicados). No cambia los que ya existen.</p>
+            <button className="btn" onClick={() => importar(false)} disabled={importando}>{importando ? "Importando…" : "Traer productos que faltan"}</button>
+            <details>
+              <summary className="ayuda">Opción avanzada</summary>
+              <p className="ayuda">Reemplazar los datos de todos los productos con los de la planilla (solo si editaste la planilla después de pasarte a la Admin).</p>
+              <button className="btn peligro chico" onClick={() => importar(true)} disabled={importando}>Reemplazar con la planilla</button>
+            </details>
+            {resultado && (
+              <p className={"aviso " + (resultado.errores.length ? "error" : "ok")}>
+                {resultado.total} filas en la planilla · {resultado.nuevos} agregados · {resultado.actualizados} reemplazados · {resultado.sinCambios} ya estaban
+                {resultado.errores.length > 0 && <><br />Con problemas: {resultado.errores.join(" · ")}</>}
+              </p>
+            )}
+          </section>
         </>
       )}
     </main>

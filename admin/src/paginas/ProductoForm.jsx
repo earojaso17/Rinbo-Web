@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { obtenerProducto, listarProductos, crearProducto, actualizarProducto, borrarProducto,
-  subirFoto, borrarFoto, ordenar, urlPublica, mensajeError } from "../lib/datos.js";
+  subirFoto, borrarFoto, ordenar, urlPublica, urlEnLaWeb, mensajeError } from "../lib/datos.js";
 import { ir, Cargando } from "../lib/ui.jsx";
 
 const VACIO = { id: "", nombre: "", categoria_principal: "", categoria_secundaria: "", detalle: "", marca: "",
@@ -109,6 +109,9 @@ export default function ProductoForm({ id }) {
     <main className="pagina">
       <a className="enlace" href="#/productos">← Productos</a>
       <h1 className="titulo">{nuevo ? "Nuevo producto" : form.nombre || "Producto"}</h1>
+      {!nuevo && original?.publicado && (
+        <a className="enlace" href={urlEnLaWeb(original.nombre)} target="_blank" rel="noopener">Ver en rinbo.store ↗ <small>(los cambios aparecen en ~15 min)</small></a>
+      )}
 
       <section className="tarjeta">
         <h2 className="subtitulo">Fotos <small className="num">{fotos.length} / {MAX_FOTOS}</small></h2>

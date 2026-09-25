@@ -15,6 +15,11 @@ const CONFIG = {
     { img: "/img/slide-4.webp", titulo: "Cartas TCG", texto: "Pokemón · OnePiece · Magic · Entre Otras", jp: "カード" },
     { img: "/img/slide-5.webp", titulo: "SkinCare Perfecto", texto: "Los mejores productos para tu piel", jp: "美容" }
   ],
+  // De dónde sale el catálogo: "supabase" (lo que se edita en RINBŌ Admin) o "planilla" (Google Sheets, para volver atrás)
+  fuenteCatalogo: "supabase",
+  supabaseUrl: "https://mgxljvxjonopchpvmjkl.supabase.co",
+  // Llave pública (publishable): solo permite leer los productos publicados con public.catalogo()
+  supabaseLlave: "sb_publishable_KwzdkIFMqA9ewv9Kg321iw_S6MnaRnd",
   // CSV publicado de la pestaña Catálogo (planilla RINBO_Publica)
   sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv",
   // CSV publicado de la pestaña de seguimiento (SegPublica), mismo documento
@@ -80,17 +85,26 @@ const CONFIG = {
       id: r.id, nombre: r.nombre, cat: r.categoria_principal || "", sub: r.categoria_secundaria || "", detalle: r.detalle || "",
       ops: [opcion(r.opcion_1), opcion(r.opcion_2)].filter(Boolean), desc: r.descripcion || "", estado: r.estado || "",
       precio: numero(r.precio_clp), oferta: numero(r.precio_oferta), stock: r.stock || "",
-      destacado: String(r.destacado).toUpperCase() === "SI", tabla: r.tabla_tallas || "", pie: r.detalle_pie || "",
+      destacado: r.destacado === true || String(r.destacado).toUpperCase() === "SI", tabla: r.tabla_tallas || "", pie: r.detalle_pie || "",
       ig: /^https?:\/\//.test(r.instagram || "") ? r.instagram : "",
-      fotos: Array.from({ length: 12 }, (_, i) => r["foto_" + (i + 1)]).filter(Boolean).map(u => ({ url: u }))
+      fotos: Array.isArray(r.fotos)
+        ? r.fotos.map(f => f.g ? { m: f.m, g: f.g, w: f.w, h: f.h } : { url: f.url }).filter(f => f.g || f.url)
+        : Array.from({ length: 12 }, (_, i) => r["foto_" + (i + 1)]).filter(Boolean).map(u => ({ url: u }))
     };
   }
   async function cargarCatalogo() {
-    // 1º el catálogo que prepara el robot (web/datos/catalogo.json: rápido y con fotos WebP); si no existe, la planilla directa
+    // 1º el catálogo que prepara el robot (web/datos/catalogo.json: rápido y con fotos WebP); si no existe, la fuente directa
     try {
       const res = await fetch("/datos/catalogo.json", { cache: "no-cache" });
       if (res.ok) { const d = await res.json(); if (Array.isArray(d) && d.length) return d; }
     } catch (e) {}
+    if (CONFIG.fuenteCatalogo === "supabase") {
+      const res = await fetch(CONFIG.supabaseUrl + "/rest/v1/rpc/catalogo", {
+        method: "POST", headers: { apikey: CONFIG.supabaseLlave, "Content-Type": "application/json" }, body: "{}"
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return (await res.json()).map(normalizar);
+    }
     const filas = await leerCSV(CONFIG.sheetCsvUrl);
     return filas.filter(r => r.id && r.nombre && String(r.publicado).toUpperCase() === "SI").map(normalizar);
   }

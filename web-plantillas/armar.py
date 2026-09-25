@@ -628,9 +628,9 @@ def main():
     if '--catalogo' in sys.argv:
         try:
             P = cat.actualizar()
-            print(f'Planilla leída: {len(P)} productos publicados')
+            print(f'Catálogo leído: {len(P)} productos publicados')
         except Exception as e:  # sin internet o Google caído: se arma con el catálogo guardado
-            print(f'! No se pudo leer la planilla ({e}); se usa el catálogo guardado.', file=sys.stderr)
+            print(f'! No se pudo leer el catálogo ({e}); se usa el catálogo guardado.', file=sys.stderr)
             P = cat.cargar()
     else:
         P = cat.cargar()
