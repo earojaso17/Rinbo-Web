@@ -1,0 +1,6 @@
+# Cloudflare Pages: la Admin nunca se indexa y no se puede mostrar dentro de otros sitios.
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  Referrer-Policy: same-origin
+  X-Content-Type-Options: nosniff

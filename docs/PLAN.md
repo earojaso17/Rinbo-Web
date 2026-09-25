@@ -77,3 +77,10 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Auth: registros abiertos desactivados.
 - [x] Usuario administrador `hola@rinbo.store` creado por el dueño en el panel y agregado a `rinbo.admins` (es_admin() verificado).
 - [ ] Rotar el JWT secret antiguo (salió en un registro de la sesión; base aún sin datos reales) — opcional, antes de la fase 3.
+
+### Avance fase 3 (2026-09-25)
+- [x] Migración 4: `rinbo.ordenar_fotos()` (reordenar fotos en un paso; 3 pruebas OK).
+- [x] App `admin/` (Vite + React): entrar, inicio con espacio del plan gratis, productos (buscar, filtrar, publicar), ficha (todos los campos de la planilla + marca), fotos (compresión en el navegador, ordenar, borrar). Probada con una base simulada.
+- [ ] Exponer el esquema `rinbo` en la Data API de Supabase (decisión del dueño; lo bloquea el entorno de Claude).
+- [ ] Cloudflare Pages "rinbo-admin" + Cloudflare Access (dueño, con guía).
+- [ ] Prueba real con la cuenta hola@rinbo.store.

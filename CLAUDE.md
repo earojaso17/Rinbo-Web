@@ -89,9 +89,14 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 - Esquema privado `rinbo` (no expuesto), RLS solo admins; la web solo puede usar `public.catalogo()` y `public.producto()`.
 - Toda migración: archivo en `supabase/migrations/`, ensayo con pruebas en una transacción que se deshace, y recién ahí aplicar.
 
+## admin/ (fase 3) — ver `admin/README.md`
+
+- RINBŌ Admin: Vite + React + supabase-js; acceso a datos solo en `admin/src/lib/datos.js` (esquema `rinbo`), compresión de fotos en `admin/src/lib/fotos.js`.
+- Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
+
 ## Convenciones
 
 - Español en textos, nombres de variables y funciones.
-- JS vanilla, sin frameworks. Fuentes de Google Fonts (Archivo, Geist, Geist Mono, Zen Kaku Gothic New).
+- Sitio público (`web/`): JS vanilla, sin frameworks. Fuentes de Google Fonts (Archivo, Geist, Geist Mono, Zen Kaku Gothic New).
 - Todo texto que venga de la planilla se escapa (`esc`/`saltos`) antes de insertarlo en el HTML.
 - SEO: no inventar textos (títulos/descripciones salen de textos existentes o de la planilla); "desde Japón a Chile", nunca ciudades de Japón; sin precios en yenes ni correo; contacto solo WhatsApp e Instagram. Guía para el dueño: `docs/SEO.md`.
