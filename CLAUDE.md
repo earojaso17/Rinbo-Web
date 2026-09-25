@@ -2,7 +2,9 @@
 
 Sitio estático de RINBŌ Ichiba: catálogo de productos japoneses para Chile, cotización por WhatsApp y seguimiento de pedidos. Sin backend, sin build, sin dependencias npm.
 
-## Estructura
+Repo con tres carpetas (ver `docs/PLAN.md`): `web/` (sitio público, lo único que se publica en rinbo.store), `admin/` (RINBŌ Admin, fase 3) y `supabase/` (base de datos, fase 2).
+
+## Estructura de web/
 
 ```
 index.html          Portada: carrusel, destacados, catálogo (8/pág), encargos, ofertas, contacto
@@ -52,10 +54,11 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 
 ## Cómo se publica
 
-- GitHub Pages, "Deploy from a branch": rama `main`, carpeta `/` (root). No hay workflow propio; GitHub ejecuta `pages-build-deployment` en cada push a `main`.
-- Dominio `rinbo.store` vía archivo `CNAME` + registros DNS en Wix (A a 185.199.108–111.153, `www` CNAME a github.io).
-- Publicar = commit + push a `main`. Tarda ~1-2 minutos. No hay entorno de pruebas: lo que entra a `main` queda en producción.
-- Para probar localmente: `python3 -m http.server` en la raíz (fetch no funciona con `file://`).
+- Producción: GitHub Pages con Source = "GitHub Actions". El workflow `.github/workflows/pages.yml` publica SOLO `web/` en cada push a `main` que toque `web/**` (o a mano con "Run workflow").
+- Dominio `rinbo.store` configurado en Settings → Pages + registros DNS en Wix (A a 185.199.108–111.153, `www` CNAME a github.io). El DNS se queda en Wix hasta la renovación de marzo 2027.
+- Publicar = commit + push a `main`. Tarda ~1-2 minutos. Lo que entra a `main` queda en producción.
+- Vista previa: Cloudflare Pages, proyecto `rinbo-web` (directorio raíz `web`, sin comando de build). Cada rama tiene su URL `<rama>.rinbo-web.pages.dev`; `main` → `rinbo-web.pages.dev`. `web/_headers` marca `*.pages.dev` como noindex.
+- Para probar localmente: `cd web && python3 -m http.server` (fetch no funciona con `file://`).
 
 ## Convenciones
 

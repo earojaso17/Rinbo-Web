@@ -1,0 +1,7 @@
+# Solo tiene efecto en Cloudflare Pages (en GitHub Pages no hace nada).
+# Evita que Google indexe las vistas previas *.pages.dev como copia de rinbo.store.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
