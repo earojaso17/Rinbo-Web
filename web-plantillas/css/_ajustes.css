@@ -24,3 +24,10 @@
 .toast:not(.show){transform:translate(-50%,calc(100% + 24px + env(safe-area-inset-bottom,0px)));visibility:hidden;transition:transform .4s var(--ease),visibility 0s .4s}
 .toast.show{visibility:visible}
 @media (min-width:720px){.ig-grid.ig-3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Cuadros con foto: fondo blanco limpio (fotos sin fondo / PNG transparentes).
+   El patrón con kanji queda solo para productos sin foto. */
+.ph:not(.noimg){background:#fff}
+.ph:not(.noimg)::before{display:none}
+.ph:not([data-label])::after{display:none}
+.lb .ph:not(.noimg){background:none}
