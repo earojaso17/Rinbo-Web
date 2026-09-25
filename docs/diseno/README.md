@@ -1,6 +1,6 @@
 # Diseño nuevo de la web pública (mockup del dueño, 2026-09-25)
 
-`mockup/` es el "look and feel" aprobado para el rediseño (fase 7). Es solo referencia: no se publica.
+`mockup/` es el "look and feel" aprobado para el rediseño (fase 7, adelantada). Es solo referencia: no se publica. La versión real está en `web/` y se arma desde `web-plantillas/`.
 
 - Se abre localmente con `cd docs/diseno/mockup && python3 -m http.server` → http://localhost:8000
 - `_build.py` arma las 7 páginas a partir de `_paginas/` + `_defs.html` (cabecera, menú, pie y cotización compartidos) y une los CSS en `css/rinbo.css`.

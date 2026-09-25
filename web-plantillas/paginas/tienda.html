@@ -1,0 +1,37 @@
+Tienda — RINBŌ Ichiba
+<main id="main" data-page="tienda">
+  <div class="wrap">
+    {CRUMBS:Tienda}
+    <header class="page-head">
+      <div>
+        <h1 class="display" id="pageTitle">Tienda</h1>
+        <p class="lede">Ichiba (<span class="jp">市場</span>) significa "mercado" en japonés.</p>
+      </div>
+      <span class="vk" aria-hidden="true">市場</span>
+    </header>
+    <nav class="cat-nav" id="catNav" aria-label="Categorías"></nav>
+    <div class="sub-nav" id="subNav" role="group" aria-label="Subcategorías" hidden></div>
+
+    <div class="shop" id="shopTop">
+      <aside class="filters" id="filters" aria-labelledby="filt-t">
+        <div class="grab" aria-hidden="true"></div>
+        <div class="fhead"><h2 id="filt-t">Filtros</h2><button class="x" type="button" data-close aria-label="Cerrar filtros"><svg class="i"><use href="#i-close"/></svg></button></div>
+        <div class="fbody" id="filtGroups"></div>
+        <div class="ffoot"><button class="btn btn-line btn-plain" type="button" data-clear>Limpiar</button><button class="btn btn-ai btn-plain" type="button" id="seeResults">Ver <span class="num" id="seeN">0</span>&nbsp;productos</button></div>
+      </aside>
+
+      <section aria-label="Productos">
+        <div class="shop-bar">
+          <button class="fbtn" type="button" id="openFilters"><svg class="i"><use href="#i-filter"/></svg>Filtros <span class="fcount" hidden></span></button>
+          <div class="results" aria-live="polite"><span id="count-txt"></span></div>
+          <label class="sortwrap" for="orden"><span>Ordenar</span>
+            <select class="sort" id="orden"><option value="rel">Recomendados</option><option value="low">Menor precio</option><option value="high">Mayor precio</option></select>
+          </label>
+        </div>
+        <div class="active" id="active" hidden></div>
+        <div class="grid" id="grid"></div>
+        <nav class="pager" id="pager" aria-label="Páginas"></nav>
+      </section>
+    </div>
+  </div>
+</main>

@@ -55,3 +55,10 @@ Decisión (opción C): mantener el DNS en Wix hasta la renovación (6 mar 2027) 
 - [x] GitHub Pages: Source = GitHub Actions; PR #1 unido a `main`; workflow OK; rinbo.store y rinbo-web.pages.dev verificados.
 - Rollback si hiciera falta: Revert del PR #1 + Source → "Deploy from a branch" `main` / `(root)`.
 - Desde ahora los archivos del sitio se editan en `web/` (p. ej. `web/js/app.js`).
+
+## Cambio de orden (2026-09-25): el rediseño (fase 7) se adelanta
+Decisión del dueño: aplicar ya el nuevo diseño (maqueta en `docs/diseno/mockup/`), conectado a la planilla actual. La fase 2 (Supabase) queda en pausa sin nada creado.
+- Rama `claude/rediseno-web` → vista previa en Cloudflare Pages. rinbo.store no cambia hasta que el dueño apruebe y se una a `main`.
+- `web/` ahora se genera con `web-plantillas/armar.py`; la lógica está en `web/js/rinbo.js` y `cargarCatalogo()` es la única pieza a cambiar en la fase 4.
+- Se mantiene: links `producto.html?id=X`, cotización guardada (`rinbo_cotizacion_v3`), WhatsApp, lectura de SegPublica (solo lectura), etiquetas og:*, CNAME, sitemap, robots, _headers.
+- Rollback cuando esté en `main`: Revert del PR del rediseño (vuelve el sitio anterior en ~2 min).
