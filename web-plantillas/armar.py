@@ -41,7 +41,7 @@ def armar_css():
         encoding='utf-8')
 
 
-def pagina(nombre, titulo, main, defs, v_css, v_js):
+def pagina(nombre, titulo, main, defs, v_css, v_js, v_og):
     archivo = f'{nombre}.html'
     cur = lambda f: ' aria-current="page"' if f == archivo else ''
     seg = lambda f: ' class="nav-seg"' if f == 'seguimiento.html' else ''
@@ -66,7 +66,7 @@ def pagina(nombre, titulo, main, defs, v_css, v_js):
 <meta property="og:site_name" content="RINBŌ Ichiba">
 <meta property="og:title" content="RINBŌ Ichiba — Lo que solo se consigue en Japón">
 <meta property="og:description" content="{OG_DESC}">
-<meta property="og:image" content="https://rinbo.store/img/og-card.jpg">
+<meta property="og:image" content="https://rinbo.store/img/og-card.jpg?v={v_og}">
 <meta property="og:url" content="{url}">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
@@ -157,7 +157,7 @@ RUTA = '''<div class="route mono" aria-label="Desde Japón a Chile"><strong>JP</
 def main():
     defs = (AQUI / 'comun.html').read_text(encoding='utf-8').strip()
     armar_css()
-    v_css, v_js = huella(WEB / 'css' / 'rinbo.css'), huella(WEB / 'js' / 'rinbo.js')
+    v_css, v_js, v_og = huella(WEB / 'css' / 'rinbo.css'), huella(WEB / 'js' / 'rinbo.js'), huella(WEB / 'img' / 'og-card.jpg')
     for nombre in ['index', 'tienda', 'producto', 'como-funciona', 'acerca', 'faq', 'seguimiento']:
         src = (AQUI / 'paginas' / f'{nombre}.html').read_text(encoding='utf-8')
         titulo, contenido = src.split('\n', 1)
@@ -166,7 +166,7 @@ def main():
             a = contenido.index('{CRUMBS:'); b = contenido.index('}', a)
             spec = contenido[a + 8:b].split('|')
             contenido = contenido[:a] + migas(*[tuple(s.split('>')) if '>' in s else ('', s) for s in spec]) + contenido[b + 1:]
-        pagina(nombre, titulo.strip(), contenido.rstrip(), defs, v_css, v_js)
+        pagina(nombre, titulo.strip(), contenido.rstrip(), defs, v_css, v_js, v_og)
     print('Listo: 7 páginas, css/rinbo.css (v=%s), js/rinbo.js (v=%s)' % (v_css, v_js))
 
 

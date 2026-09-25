@@ -26,6 +26,7 @@ Los 7 HTML de `web/` y `web/css/rinbo.css` son **generados**: no editarlos a man
 - `comun.html`: íconos y sello SVG. Cabecera, menú, pie, panel de cotización y `<head>` (meta, og:*) están en `armar.py`.
 - `css/_base.css, _tienda.css, _paginas.css, _tienda2.css` (diseño original) + `_ajustes.css` (ajustes para datos reales).
 - Después de cualquier cambio (también en `web/js/rinbo.js`): `python3 web-plantillas/armar.py`. Agrega `?v=<huella>` a rinbo.css/rinbo.js para que los navegadores no usen la versión vieja.
+- `og-card.html` + `og-card.js`: tarjeta para compartir (`web/img/og-card.jpg`, 1200x630; lo importante en el cuadrado central porque WhatsApp la recorta). Regenerar con `node web-plantillas/og-card.js` y luego `armar.py` (el `og:image` lleva `?v=` para que WhatsApp/Facebook no usen la vieja).
 - La maqueta original del dueño está en `docs/diseno/mockup/` (solo referencia).
 
 ## js/rinbo.js
