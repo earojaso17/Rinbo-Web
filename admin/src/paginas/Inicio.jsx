@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Publicar from "../lib/Publicar.jsx";
-import { usoAlmacenamiento, borrarArchivosHuerfanos, importarPlanilla, mensajeError } from "../lib/datos.js";
+import { usoAlmacenamiento, borrarArchivosHuerfanos, importarPlanilla, importarSegPublica, mensajeError } from "../lib/datos.js";
 
 const mb = b => (b / 1024 / 1024).toLocaleString("es-CL", { maximumFractionDigits: b < 10 * 1024 * 1024 ? 1 : 0 }) + " MB";
 
@@ -32,6 +32,15 @@ export default function Inicio({ correo }) {
     setImportando(false);
   }
 
+  const [importandoSeg, setImportandoSeg] = useState(false);
+  const [resultadoSeg, setResultadoSeg] = useState(null);
+  async function importarSeg() {
+    setImportandoSeg(true); setResultadoSeg(null); setError("");
+    try { setResultadoSeg(await importarSegPublica()); await cargar(); }
+    catch (e) { setError(mensajeError(e)); }
+    setImportandoSeg(false);
+  }
+
   const cargar = () => usoAlmacenamiento().then(setUso).catch(e => setError(mensajeError(e)));
   useEffect(() => { cargar(); }, []);
 
@@ -53,8 +62,8 @@ export default function Inicio({ correo }) {
         <>
           <section className="tarjeta resumen">
             <a href="#/productos"><b className="num">{uso.tablas.productos}</b><span>Productos</span></a>
-            <span><b className="num">{uso.tablas.clientes}</b><span>Clientes</span></span>
-            <span><b className="num">{uso.tablas.pedidos}</b><span>Pedidos</span></span>
+            <a href="#/clientes"><b className="num">{uso.tablas.clientes}</b><span>Clientes</span></a>
+            <a href="#/pedidos"><b className="num">{uso.tablas.pedidos}</b><span>Pedidos</span></a>
           </section>
           <section className="tarjeta">
             <h2 className="subtitulo">Espacio del plan gratis</h2>
@@ -71,7 +80,10 @@ export default function Inicio({ correo }) {
             )}
             {aviso && <p className="aviso ok">{aviso}</p>}
           </section>
-          <a className="btn principal ancho" href="#/productos/nuevo">+ Nuevo producto</a>
+          <div className="dos">
+            <a className="btn principal" href="#/pedidos/nuevo">+ Nuevo pedido</a>
+            <a className="btn" href="#/productos/nuevo">+ Nuevo producto</a>
+          </div>
           <section className="tarjeta">
             <h2 className="subtitulo">rinbo.store</h2>
             <p className="ayuda">La web se actualiza sola cada 15 minutos con lo que guardas aquí. Si no quieres esperar, publica ahora.</p>
@@ -92,6 +104,18 @@ export default function Inicio({ correo }) {
                 {resultado.errores.length > 0 && <><br />Con problemas: {resultado.errores.join(" · ")}</>}
               </p>
             )}
+          </section>
+          <section className="tarjeta">
+            <h2 className="subtitulo">Pedidos de SegPublica</h2>
+            <p className="ayuda">Trae a la Admin los pedidos de la pestaña SegPublica que todavía no están aquí (mismo código R…, etapa actual, abonado y fotos). No cambia los que ya existen ni toca la planilla.</p>
+            <button className="btn" onClick={importarSeg} disabled={importandoSeg}>{importandoSeg ? "Importando…" : "Traer pedidos que faltan"}</button>
+            {resultadoSeg && (
+              <p className={"aviso " + (resultadoSeg.errores.length ? "error" : "ok")}>
+                {resultadoSeg.total} filas en SegPublica · {resultadoSeg.nuevos} agregados · {resultadoSeg.yaEstaban} ya estaban
+                {resultadoSeg.errores.length > 0 && <><br />Con problemas: {resultadoSeg.errores.join(" · ")}</>}
+              </p>
+            )}
+            {resultadoSeg?.nuevos > 0 && <p className="ayuda">Ahora entra a cada pedido en Pedidos, asígnale su cliente y envíale su link nuevo con "Enviar por WhatsApp".</p>}
           </section>
         </>
       )}
