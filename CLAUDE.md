@@ -83,6 +83,12 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 - Vista previa: Cloudflare Pages, proyecto `rinbo-web` (directorio raíz `web`, sin comando de build). Cada rama tiene su URL `<rama>.rinbo-web.pages.dev`; `main` → `rinbo-web.pages.dev`. `web/_headers` marca `*.pages.dev` como noindex.
 - Para probar localmente: `cd web && python3 -m http.server` (fetch no funciona con `file://`).
 
+## Supabase (fase 2) — ver `supabase/README.md`
+
+- Proyecto `rinbo` (ref `mgxljvxjonopchpvmjkl`, São Paulo). SQL por Management API (`POST /v1/projects/<ref>/database/query`, token del entorno); la conexión directa a Postgres está bloqueada.
+- Esquema privado `rinbo` (no expuesto), RLS solo admins; la web solo puede usar `public.catalogo()` y `public.producto()`.
+- Toda migración: archivo en `supabase/migrations/`, ensayo con pruebas en una transacción que se deshace, y recién ahí aplicar.
+
 ## Convenciones
 
 - Español en textos, nombres de variables y funciones.
