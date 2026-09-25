@@ -8,6 +8,7 @@ App de gestión (Vite + React + supabase-js), pensada primero para celular. No s
 - Fase 5 (`src/paginas/`): Pedidos (lista con filtros En curso / Con saldo / Entregados), PedidoNuevo (cliente existente o nuevo + total),
   PedidoDetalle (link y mensaje de seguimiento por WhatsApp, cambiar código secreto, etapas con fecha/comentario/visible, cuenta y pagos,
   fotos de evidencia privadas con 👁 visible/oculta, artículos, datos y notas internas, "Mi control": precio de venta, costo, impuestos y utilidad calculada; la lista suma la utilidad), Clientes y ClienteForm (con sus pedidos).
+- Fase 10 (`src/lib/Resumen.jsx`, en Inicio): cifras del mes, gráficos de pedidos y ganancia por mes (12 meses, SVG propio), tabla por mes y botón "Descargar Excel" (`exportarExcel()` en datos.js, librería `write-excel-file` cargada solo al descargar): hojas Pedidos, Artículos, Pagos, Clientes, Productos y Resumen por mes. Los meses se cuentan en hora de Chile. La ganancia solo suma pedidos con costo o impuestos registrados.
 - Rutas con `#` (`#/productos/<código>`, `#/pedidos/<id>`, `#/pedidos/nuevo?cliente=<id>`, `#/clientes/<id>`), así funciona en cualquier hosting estático.
 
 ## Probar en el computador

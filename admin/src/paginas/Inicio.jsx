@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Publicar from "../lib/Publicar.jsx";
+import Resumen from "../lib/Resumen.jsx";
 import { usoAlmacenamiento, borrarArchivosHuerfanos, importarPlanilla, mensajeError } from "../lib/datos.js";
 
 const mb = b => (b / 1024 / 1024).toLocaleString("es-CL", { maximumFractionDigits: b < 10 * 1024 * 1024 ? 1 : 0 }) + " MB";
@@ -75,6 +76,7 @@ export default function Inicio({ correo }) {
             <a className="btn principal" href="#/pedidos/nuevo">+ Nuevo pedido</a>
             <a className="btn" href="#/productos/nuevo">+ Nuevo producto</a>
           </div>
+          <Resumen />
           <section className="tarjeta">
             <h2 className="subtitulo">rinbo.store</h2>
             <p className="ayuda">La web se actualiza sola cada 15 minutos con lo que guardas aquí. Si no quieres esperar, publica ahora.</p>

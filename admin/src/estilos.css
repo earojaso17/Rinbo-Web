@@ -201,3 +201,26 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--ai); outlin
 .resumen-utilidad span { color: var(--muted); font-size: .85rem; }
 .resumen-utilidad b { font-family: var(--f-display); font-size: 1.6rem; color: var(--ok); }
 .resumen-utilidad small { color: var(--muted); font-size: .8rem; }
+
+/* Resumen (Inicio) */
+.cifras { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cifras div { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: var(--tint); }
+.cifras span { font-size: .78rem; color: var(--muted); }
+.cifras b { font-family: var(--f-display); font-size: 1.25rem; font-weight: 800; }
+.grafico { margin: 0; display: grid; gap: 4px; }
+.grafico figcaption { font-weight: 700; font-size: .9rem; }
+.grafico svg { width: 100%; height: auto; overflow: visible; }
+.grafico .barra { fill: #b3261e; }
+.grafico g.activa .barra { fill: #7a0000; }
+.grafico .eje { stroke: var(--line); stroke-width: 1; }
+.grafico .mes { font: 10px var(--f-body); fill: var(--muted); text-anchor: middle; }
+.grafico .valor { font: 600 10px var(--f-body); fill: var(--ink-2); text-anchor: middle; }
+.grafico g { cursor: pointer; }
+.grafico .tip { margin: 0; min-height: 1.3em; font-size: .8rem; color: var(--muted); }
+.grafico .tip b { color: var(--ink); }
+.tabla-scroll { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.tabla th, .tabla td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.tabla th:first-child, .tabla td:first-child { text-align: left; }
+.tabla th { color: var(--muted); font-weight: 600; }
+@media (min-width: 720px) { .cifras { grid-template-columns: repeat(4, 1fr); } }

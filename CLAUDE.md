@@ -99,6 +99,7 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 - Inicio de la Admin: botón "Traer productos que faltan" (importa desde la planilla antigua, en el navegador del dueño, solo los códigos que no existen; opción avanzada para reemplazar). Cada producto publicado tiene link "Ver en rinbo.store".
 - Botón "Publicar cambios ahora" (Inicio y tras guardar): `admin/functions/api/publicar.js` (Cloudflare Pages Function) → `workflow_dispatch` de `pages.yml`; el token de GitHub es el secreto `GITHUB_TOKEN` de Cloudflare, nunca va al navegador.
 - Pedidos y Clientes (fase 5): control privado de utilidad (venta − costo − impuestos; nunca sale en el seguimiento), etapas, pagos, fotos de evidencia (bucket privado), link de seguimiento por WhatsApp.
+- Inicio (fase 10): resumen por mes (pedidos, ventas, ganancia, por cobrar) y "Descargar Excel" con todo (respaldo).
 - Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
 
 ## Convenciones
