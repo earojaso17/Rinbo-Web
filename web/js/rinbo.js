@@ -7,19 +7,21 @@
 const CONFIG = {
   // Número de WhatsApp Business SIN el "+" (código país incluido). Ej Japón: "819012345678"
   whatsapp: "819039343820",
-  // Carrusel de portada: imagen en img/, título, texto y kanji que se ve mientras carga la foto
+  // Carrusel de portada: imagen en img/ (armar.py convierte cada .jpg a .webp), título, texto y kanji que se ve mientras carga la foto
   heroSlides: [
-    { img: "img/portada.jpg", titulo: "Lo mejor de Japón, directo a tu puerta", texto: "Comprado en persona · enviado desde Japón", jp: "輪宝" },
-    { img: "img/slide-2.jpg", titulo: "Drops UT de Uniqlo", texto: "Colaboraciones de Anime que no salen de Japón", jp: "服" },
-    { img: "img/slide-3.jpg", titulo: "Relojes japoneses", texto: "Seiko · Citizen · Orient · Casio", jp: "時計" },
-    { img: "img/slide-4.jpg", titulo: "Cartas TCG", texto: "Pokemón · OnePiece · Magic · Entre Otras", jp: "カード" },
-    { img: "img/slide-5.jpg", titulo: "SkinCare Perfecto", texto: "Los mejores productos para tu piel", jp: "美容" }
+    { img: "/img/portada.webp", titulo: "Lo mejor de Japón, directo a tu puerta", texto: "Comprado en persona · enviado desde Japón", jp: "輪宝" },
+    { img: "/img/slide-2.webp", titulo: "Drops UT de Uniqlo", texto: "Colaboraciones de Anime que no salen de Japón", jp: "服" },
+    { img: "/img/slide-3.webp", titulo: "Relojes japoneses", texto: "Seiko · Citizen · Orient · Casio", jp: "時計" },
+    { img: "/img/slide-4.webp", titulo: "Cartas TCG", texto: "Pokemón · OnePiece · Magic · Entre Otras", jp: "カード" },
+    { img: "/img/slide-5.webp", titulo: "SkinCare Perfecto", texto: "Los mejores productos para tu piel", jp: "美容" }
   ],
   // CSV publicado de la pestaña Catálogo (planilla RINBO_Publica)
   sheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=344349355&single=true&output=csv",
   // CSV publicado de la pestaña de seguimiento (SegPublica), mismo documento
   seguimientoCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkxRbV34pHdMGFF99GL125xelh2PdbdmX_JF_mtIkKgU45xsVYf3C1620CiQrwqSBljbbiYWbkfqLK/pub?gid=308139092&single=true&output=csv",
   instagram: "https://www.instagram.com/rinbo.store/",
+  // ID de medición de Google Analytics 4 (ej. "G-ABC123XYZ"). Vacío = sin Analytics y sin aviso de cookies.
+  ga4: "",
   // Kanji decorativo de cada categoría principal (una categoría nueva usa 品)
   kanjiCategorias: { "Vestuario": "服", "Ropa": "服", "Cartas TCG": "カード", "Segunda mano": "中古", "Relojes": "時計", "Accesorios": "小物", "Coleccionables": "収集", "Tecnología": "技術", "Belleza": "美容" }
 };
@@ -80,10 +82,15 @@ const CONFIG = {
       precio: numero(r.precio_clp), oferta: numero(r.precio_oferta), stock: r.stock || "",
       destacado: String(r.destacado).toUpperCase() === "SI", tabla: r.tabla_tallas || "", pie: r.detalle_pie || "",
       ig: /^https?:\/\//.test(r.instagram || "") ? r.instagram : "",
-      fotos: Array.from({ length: 12 }, (_, i) => r["foto_" + (i + 1)]).filter(Boolean)
+      fotos: Array.from({ length: 12 }, (_, i) => r["foto_" + (i + 1)]).filter(Boolean).map(u => ({ url: u }))
     };
   }
   async function cargarCatalogo() {
+    // 1º el catálogo que prepara el robot (web/datos/catalogo.json: rápido y con fotos WebP); si no existe, la planilla directa
+    try {
+      const res = await fetch("/datos/catalogo.json", { cache: "no-cache" });
+      if (res.ok) { const d = await res.json(); if (Array.isArray(d) && d.length) return d; }
+    } catch (e) {}
     const filas = await leerCSV(CONFIG.sheetCsvUrl);
     return filas.filter(r => r.id && r.nombre && String(r.publicado).toUpperCase() === "SI").map(normalizar);
   }
@@ -96,7 +103,8 @@ const CONFIG = {
   const precioActivo = p => enOferta(p) ? p.oferta : p.precio;
   const usado = p => /usado|semi/i.test(p.estado);
   const kanji = cat => CONFIG.kanjiCategorias[cat] || "品";
-  const url = p => `producto.html?id=${encodeURIComponent(p.id)}`;
+  const url = p => p.slug ? `/producto/${p.slug}/` : `/producto.html?id=${encodeURIComponent(p.id)}`;
+  const urlCat = c => P.some(p => p.slug) ? `/tienda/${slug(c)}/` : `/tienda.html?cat=${slug(c)}`;
 
   // Links de Google Drive → miniatura del ancho pedido
   function fotoUrl(u, ancho = 1000) {
@@ -109,9 +117,11 @@ const CONFIG = {
     const img = src ? `<img src="${esc(src)}" alt="${esc(alt)}"${eager ? "" : ' loading="lazy"'} onerror="this.parentNode.classList.add('noimg')">` : "";
     return `<div class="ph${src ? "" : " noimg"}" data-jp="${esc(jp)}">${img}${dentro}</div>`;
   }
-  const fotoProd = (p, i = 0, ancho = 600, dentro = "") => ph(fotoUrl(p.fotos[i], ancho), kanji(p.cat), p.nombre, dentro);
+  // Cada foto es {m, g} (WebP 600 y 1200 del robot) o {url} (link directo de la planilla)
+  const fotoSrc = (f, ancho = 600) => !f ? "" : f.url ? fotoUrl(f.url, ancho) : (ancho > 600 ? f.g : f.m);
+  const fotoProd = (p, i = 0, ancho = 600, dentro = "") => ph(fotoSrc(p.fotos[i], ancho), kanji(p.cat), p.nombre, dentro);
 
-  function card(p) {
+  function card(p, eager = false) {
     const flags = [
       vendido(p) && '<span class="flag sold">Vendido</span>',
       !vendido(p) && enOferta(p) && '<span class="flag sale">Oferta</span>',
@@ -128,7 +138,7 @@ const CONFIG = {
     else if (p.ops.some(o => o.valores.length > 1)) btn = `<a class="btn btn-line" href="${url(p)}">Elegir opciones <span class="ico"><svg class="i"><use href="#i-list"/></svg></span></a>`;
     else btn = `<button class="btn btn-line" type="button" data-add="${esc(p.id)}">Agregar a cotización <span class="ico"><svg class="i"><use href="#i-plus"/></svg></span></button>`;
     return `<article class="card${vendido(p) ? " sold" : ""}">
-      <a href="${url(p)}" tabindex="-1" aria-hidden="true" style="display:block">${fotoProd(p, 0, 600, `<div class="flags">${flags}</div>`)}</a>
+      <a href="${url(p)}" tabindex="-1" aria-hidden="true" style="display:block">${ph(fotoSrc(p.fotos[0], 600), kanji(p.cat), p.nombre, `<div class="flags">${flags}</div>`, eager)}</a>
       <div class="meta mono"><span>${esc(p.sub || p.cat)}</span></div>
       <h3><a href="${url(p)}">${esc(p.nombre)}</a></h3>
       <p class="sub">${esc(p.detalle)}</p>
@@ -149,8 +159,10 @@ const CONFIG = {
       const it = this.leer(), firma = id + "::" + JSON.stringify(ops || {});
       if (!it.some(x => x.tipo === "prod" && (x.id + "::" + JSON.stringify(x.ops || {})) === firma)) it.push({ tipo: "prod", id, ops: ops || {} });
       this.guardar(it); bump(); toast("Agregado a tu cotización");
+      const p = P.find(x => x.id === id);
+      medir("agregar_cotizacion", { tipo: "producto", item_id: id, item_name: p ? p.nombre : id, value: p && !sinPrecio(p) ? precioActivo(p) : 0, currency: "CLP" });
     },
-    encargo(texto) { const it = this.leer(); it.push({ tipo: "enc", texto }); this.guardar(it); bump(); },
+    encargo(texto) { const it = this.leer(); it.push({ tipo: "enc", texto }); this.guardar(it); bump(); medir("agregar_cotizacion", { tipo: "encargo" }); },
     quitar(i) { const it = this.leer(); it.splice(i, 1); this.guardar(it); },
     resueltos() { return this.leer().map(it => it.tipo === "enc" ? it : ({ ...it, p: P.find(x => x.id === it.id) })).filter(it => it.tipo === "enc" || it.p); },
     total() { return this.resueltos().reduce((s, it) => s + (it.tipo === "prod" && !sinPrecio(it.p) ? precioActivo(it.p) : 0), 0); },
@@ -246,11 +258,49 @@ const CONFIG = {
     });
   }
 
+  /* ---------- Medición: Google Analytics 4 (solo con CONFIG.ga4 y si la persona acepta) ---------- */
+  const COOKIES = "rinbo_cookies";
+  const leerPref = () => { try { return localStorage.getItem(COOKIES); } catch (e) { return null; } };
+  function cargarAnalytics() {
+    if (window.gtag) return;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { dataLayer.push(arguments); };
+    gtag("consent", "default", { analytics_storage: "granted", ad_storage: "granted", ad_user_data: "granted", ad_personalization: "granted" });
+    gtag("js", new Date());
+    gtag("config", CONFIG.ga4);
+    const s = document.createElement("script");
+    s.async = true; s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(CONFIG.ga4);
+    document.head.appendChild(s);
+  }
+  function medir(evento, datos = {}) {
+    if (window.gtag && CONFIG.ga4) gtag("event", evento, { pagina: PAGE || "", ...datos });
+  }
+  function avisoCookies() {
+    if (!CONFIG.ga4) return;
+    const pref = leerPref();
+    if (pref === "si") { cargarAnalytics(); return; }
+    if (pref === "no") return;
+    document.body.insertAdjacentHTML("beforeend", `<div class="cookies" id="cookies" role="region" aria-label="Aviso de cookies"><p>Usamos cookies de Google Analytics para saber cómo se usa el sitio y mejorarlo.</p><div class="cookies-btns"><button class="btn btn-line btn-sm btn-plain" type="button" data-cookies="no">Rechazar</button><button class="btn btn-ai btn-sm btn-plain" type="button" data-cookies="si">Aceptar</button></div></div>`);
+    $("#cookies").addEventListener("click", e => {
+      const b = e.target.closest("[data-cookies]"); if (!b) return;
+      try { localStorage.setItem(COOKIES, b.dataset.cookies); } catch (err) {}
+      $("#cookies").remove();
+      if (b.dataset.cookies === "si") cargarAnalytics();
+    });
+  }
+  // Clics que se registran como eventos (en GA4 se marcan como "eventos clave" para Google Ads)
+  document.addEventListener("click", e => {
+    const a = e.target.closest("a"); if (!a) return;
+    if (a.id === "sendQuote" && a.getAttribute("href") !== "#") medir("pedir_cotizacion_whatsapp", { value: Cot.total(), currency: "CLP", items: Cot.resueltos().length });
+    else if (a.dataset.wa !== undefined) medir("contacto_whatsapp", { texto: a.textContent.trim() });
+    else if (/instagram\.com/.test(a.href)) medir("clic_instagram", { destino: a.href });
+  }, true);
+
   /* ---------- Páginas ---------- */
   const antes = {
-    home() { $("#rail").innerHTML = esqueleto(4); },
-    tienda() { $("#grid").innerHTML = esqueleto(8); },
-    producto() { $("#producto").innerHTML = '<div class="gallery skel">' + ph("", "") + '</div><div class="pdp-info skel"><div class="l w40"></div><div class="l"></div><div class="l w60"></div></div>'; }
+    home() { if (!$("#rail").children.length) $("#rail").innerHTML = esqueleto(4); },
+    tienda() { if (!$("#grid").children.length) $("#grid").innerHTML = esqueleto(8); },
+    producto() { if ($("#producto").dataset.static) return; $("#producto").innerHTML = '<div class="gallery skel">' + ph("", "") + '</div><div class="pdp-info skel"><div class="l w40"></div><div class="l"></div><div class="l w60"></div></div>'; }
   };
 
   const paginas = {
@@ -258,8 +308,8 @@ const CONFIG = {
       // Carrusel de portada (CONFIG.heroSlides)
       const slides = CONFIG.heroSlides || [];
       const track = $("#slides"), dotsBox = $("#dots");
-      track.innerHTML = slides.map((s, k) => `<div class="slide" aria-label="${k + 1} de ${slides.length}">${ph(s.img, s.jp || "輪宝", "", "", k === 0)}<div class="cap"><b>${esc(s.titulo)}</b>${s.texto ? `<span>${esc(s.texto)}</span>` : ""}</div></div>`).join("");
-      dotsBox.innerHTML = slides.length > 1 ? slides.map((_, k) => `<button type="button" aria-label="Slide ${k + 1}"${k === 0 ? ' aria-current="true"' : ""}></button>`).join("") : "";
+      if (!track.children.length) track.innerHTML = slides.map((s, k) => `<div class="slide" aria-label="${k + 1} de ${slides.length}">${ph(s.img, s.jp || "輪宝", "", "", k === 0)}<div class="cap"><b>${esc(s.titulo)}</b>${s.texto ? `<span>${esc(s.texto)}</span>` : ""}</div></div>`).join("");
+      if (!dotsBox.children.length) dotsBox.innerHTML = slides.length > 1 ? slides.map((_, k) => `<button type="button" aria-label="Slide ${k + 1}"${k === 0 ? ' aria-current="true"' : ""}></button>`).join("") : "";
       const dots = $$("#dots button");
       let i = 0, timer;
       const go = n => { i = (n + dots.length) % dots.length; track.scrollTo({ left: track.clientWidth * i, behavior: "smooth" }); };
@@ -292,17 +342,20 @@ const CONFIG = {
 
     productoDatos(error) {
       const cont = $("#producto");
+      // Página de producto ya escrita por armar.py (/producto/<nombre>/): solo se activan galería, opciones y botón
+      if (cont.dataset.static) { const id = $("main").dataset.id; paginas.activarFicha(cont, id, P.find(x => x.id === id)); return; }
+      // Dirección antigua producto.html?id=…
       if (error) { cont.innerHTML = errorCatalogo(); $("#relTitle").closest("section").hidden = true; return; }
       const id = new URLSearchParams(location.search).get("id") || decodeURIComponent(location.hash.slice(1));
       const p = P.find(x => x.id === id);
+      if (p && p.slug) { location.replace(url(p)); return; }
       if (!p) {
-        cont.innerHTML = '<p class="seg-msg" style="grid-column:1/-1">Producto no encontrado. <a class="link" href="tienda.html">Volver al catálogo</a></p>';
+        cont.innerHTML = '<p class="seg-msg" style="grid-column:1/-1">Producto no encontrado. <a class="link" href="/tienda.html">Volver al catálogo</a></p>';
         $("#relTitle").closest("section").hidden = true;
         return;
       }
       document.title = `${p.nombre} — RINBŌ Ichiba`;
-      $("#crumbCat").textContent = p.cat; $("#crumbCat").href = `tienda.html#${slug(p.cat)}`;
-      const sel = {}; p.ops.forEach(o => sel[o.nombre] = o.valores[0]);
+      $("#crumbCat").textContent = p.cat; $("#crumbCat").href = urlCat(p.cat);
       const fotos = p.fotos.length ? p.fotos.map((_, k) => k) : [0];
       const filas = String(p.tabla).split(/\n|;/).map(f => f.trim()).filter(Boolean).map(f => f.split("|").map(c => c.trim()));
       const tabla = filas.length > 1 ? `<div class="size-table"><table><thead><tr>${filas[0].map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>${filas.slice(1).map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>` : "";
@@ -333,13 +386,24 @@ const CONFIG = {
           ${tabla}
           ${p.pie ? `<p class="detail" style="font-size:.9rem;color:var(--muted)">${saltos(p.pie)}</p>` : ""}
         </div>`;
+      paginas.activarFicha(cont, p.id, p);
+      const rel = P.filter(x => x.cat === p.cat && x.id !== p.id && !vendido(x));
+      const relList = (rel.length ? rel : P.filter(x => x.id !== p.id && x.destacado)).slice(0, 4);
+      if (!relList.length) { $("#relTitle").closest("section").hidden = true; return; }
+      $("#relTitle").textContent = rel.length ? p.cat : "Destacados";
+      $("#rel").innerHTML = relList.map(card).join("");
+    },
+
+    activarFicha(cont, id, p) {
+      const sel = {};
+      $$(".opt-btns", cont).forEach(g => { const b = g.querySelector('[aria-pressed="true"]') || g.querySelector("button"); if (b) sel[g.dataset.op] = b.dataset.v; });
       const track = $("#gTrack"), th = $$("#thumbs button");
       track.addEventListener("scroll", () => { const n = Math.round(track.scrollLeft / track.clientWidth); th.forEach((b, k) => b.setAttribute("aria-current", k === n)); if ($("#gCount")) $("#gCount").textContent = `${n + 1} / ${th.length}`; }, { passive: true });
       th.forEach((b, k) => b.addEventListener("click", () => track.scrollTo({ left: track.clientWidth * k, behavior: "smooth" })));
       track.addEventListener("click", e => {
         const f = e.target.closest(".ph"); if (!f || f.classList.contains("noimg")) return;
-        const k = [...track.children].indexOf(f);
-        lightbox(fotoUrl(p.fotos[k], 1600), kanji(p.cat));
+        const k = [...track.children].indexOf(f), img = f.querySelector("img");
+        lightbox(p && p.fotos[k] ? fotoSrc(p.fotos[k], 1600) : img.src, f.dataset.jp);
       });
       cont.addEventListener("click", e => {
         const b = e.target.closest(".opt-btns button"); if (!b) return;
@@ -347,12 +411,7 @@ const CONFIG = {
         $$("button", g).forEach(x => x.setAttribute("aria-pressed", x === b));
         sel[g.dataset.op] = b.dataset.v; cont.querySelector(`[data-sel="${CSS.escape(g.dataset.op)}"]`).textContent = b.dataset.v;
       });
-      $("#addPdp") && $("#addPdp").addEventListener("click", () => { Cot.agregar(p.id, { ...sel }); openSheet($("#sheet")); });
-      const rel = P.filter(x => x.cat === p.cat && x.id !== p.id && !vendido(x));
-      const relList = (rel.length ? rel : P.filter(x => x.id !== p.id && x.destacado)).slice(0, 4);
-      if (!relList.length) { $("#relTitle").closest("section").hidden = true; return; }
-      $("#relTitle").textContent = rel.length ? p.cat : "Destacados";
-      $("#rel").innerHTML = relList.map(card).join("");
+      $("#addPdp") && $("#addPdp").addEventListener("click", () => { Cot.agregar(id, { ...sel }); openSheet($("#sheet")); });
     },
 
     tiendaDatos(error) {
@@ -370,7 +429,11 @@ const CONFIG = {
       ];
       const TODOS = FILTROS.flatMap(g => g.items.map(i => ({ ...i, grupo: g.grupo })));
       const st = { cat: "todos", sub: "todas", f: new Set(), orden: "rel", pag: 1 };
-      const leerHash = () => { const hs = decodeURIComponent(location.hash.slice(1)); st.cat = CATS.find(c => slug(c) === hs) || "todos"; st.sub = "todas"; st.pag = 1; };
+      // Categoría: la página /tienda/<categoria>/ la trae en data-cat; también se acepta tienda.html?cat=<categoria>
+      const leerCat = () => {
+        const pedido = $("main").dataset.cat || new URLSearchParams(location.search).get("cat") || decodeURIComponent(location.hash.slice(1));
+        st.cat = CATS.find(c => c === pedido || slug(c) === slug(pedido || "")) || "todos"; st.sub = "todas"; st.pag = 1;
+      };
       // Dentro de un mismo grupo las casillas suman (O); entre grupos se combinan (Y).
       const pasa = (p, f = st.f) => FILTROS.every(g => { const act = g.items.filter(i => f.has(i.k)); return !act.length || act.some(i => i.test(p)); });
       const base = () => P.filter(p => (st.cat === "todos" || p.cat === st.cat) && (st.sub === "todas" || p.sub === st.sub));
@@ -385,7 +448,7 @@ const CONFIG = {
       function render() {
         $("#catNav").innerHTML = [["todos", "Todos", "全"]].concat(CATS.map(c => [c, c, kanji(c)])).map(([k, t, jp]) => {
           const n = k === "todos" ? P.length : P.filter(p => p.cat === k).length;
-          return `<a class="cat-link" href="#${k === "todos" ? "tienda" : slug(k)}" data-cat="${esc(k)}" aria-current="${st.cat === k}"><span class="jp">${jp}</span>${esc(t)}<span class="n num">${n}</span></a>`;
+          return `<a class="cat-link" href="${k === "todos" ? "/tienda.html" : urlCat(k)}" data-cat="${esc(k)}" aria-current="${st.cat === k}"><span class="jp">${jp}</span>${esc(t)}<span class="n num">${n}</span></a>`;
         }).join("");
         const subs = st.cat === "todos" ? [] : [...new Set(P.filter(p => p.cat === st.cat).map(p => p.sub).filter(Boolean))];
         $("#subNav").hidden = subs.length < 1;
@@ -410,7 +473,7 @@ const CONFIG = {
         if (!r.length) {
           $("#grid").innerHTML = `<div class="empty"><span class="jp">無</span><b>No hay productos con estos filtros.</b><p>¿Buscas algo que no está en el catálogo?</p><div style="display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:center"><button class="btn btn-ink btn-plain" type="button" data-clear>Limpiar filtros</button><a class="link" href="#" data-open-encargo2>Agregar a mi cotización</a></div></div>`;
         } else {
-          const cells = vis.map(card);
+          const cells = vis.map((p, i) => card(p, i < 4));
           if (st.pag === 1) cells.splice(Math.min(6, cells.length), 0, `<aside class="promo"><span class="big-jp" aria-hidden="true">代行</span><span class="mono" style="position:relative;opacity:.8">Servicio de encargos</span><h2 class="display">¿Buscas algo que no está en el catálogo?</h2><p>Si se consigue en Japón, lo encontramos: cámaras, figuras, instrumentos, ediciones limitadas, lo que sea.</p><a class="btn" href="#" data-open-encargo2>Agregar a mi cotización <span class="ico"><svg class="i"><use href="#i-plus"/></svg></span></a></aside>`);
           $("#grid").innerHTML = cells.join("");
         }
@@ -419,7 +482,6 @@ const CONFIG = {
       const top = () => { const y = $("#shopTop").getBoundingClientRect().top + scrollY - 70; if (scrollY > y) window.scrollTo({ top: y, behavior: "smooth" }); };
       document.addEventListener("click", e => {
         const t = e.target;
-        const c = t.closest("[data-cat]"); if (c) { e.preventDefault(); st.cat = c.dataset.cat; st.sub = "todas"; st.pag = 1; history.replaceState(null, "", "#" + (st.cat === "todos" ? "tienda" : slug(st.cat))); render(); return; }
         const s = t.closest("[data-sub]"); if (s) { st.sub = s.dataset.sub; st.pag = 1; render(); return; }
         const r = t.closest("[data-rmf]"); if (r) { r.dataset.rmf === "__sub" ? st.sub = "todas" : st.f.delete(r.dataset.rmf); st.pag = 1; render(); return; }
         if (t.closest("[data-clear]")) { st.f.clear(); st.sub = "todas"; st.pag = 1; render(); return; }
@@ -430,8 +492,7 @@ const CONFIG = {
       $("#orden").addEventListener("change", e => { st.orden = e.target.value; render(); });
       $("#openFilters").addEventListener("click", () => openSheet($("#filters")));
       $("#seeResults").addEventListener("click", () => { closeSheets(); top(); });
-      window.addEventListener("hashchange", () => { leerHash(); render(); });
-      leerHash(); render();
+      leerCat(); render();
     },
 
     seguimiento() {
@@ -466,6 +527,7 @@ const CONFIG = {
         res.innerHTML = '<p class="seg-msg">Buscando…</p>';
         try {
           const p = await buscar(c);
+          medir("consultar_pedido", { encontrado: !!(p && ETAPAS.includes(p.etapa)) });
           res.innerHTML = p && ETAPAS.includes(p.etapa) ? resultado(p) : '<p class="seg-msg">No encontramos ese código. Revísalo o escríbenos por WhatsApp.</p>';
         } catch (err) {
           res.innerHTML = '<p class="seg-msg">No pudimos consultar en este momento. Intenta de nuevo o escríbenos por WhatsApp.</p>';
@@ -492,6 +554,7 @@ const CONFIG = {
   /* ---------- Inicio ---------- */
   async function init() {
     montarComunes();
+    avisoCookies();
     pintar();
     if (antes[PAGE]) antes[PAGE]();
     if (paginas[PAGE]) paginas[PAGE]();

@@ -62,3 +62,9 @@ Decisión del dueño: aplicar ya el nuevo diseño (maqueta en `docs/diseno/mocku
 - `web/` ahora se genera con `web-plantillas/armar.py`; la lógica está en `web/js/rinbo.js` y `cargarCatalogo()` es la única pieza a cambiar en la fase 4.
 - Se mantiene: links `producto.html?id=X`, cotización guardada (`rinbo_cotizacion_v3`), WhatsApp, lectura de SegPublica (solo lectura), etiquetas og:*, CNAME, sitemap, robots, _headers.
 - Rollback cuando esté en `main`: Revert del PR del rediseño (vuelve el sitio anterior en ~2 min).
+
+## SEO / SEM (2026-09-25)
+Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas).
+- Páginas estáticas por producto (`/producto/<nombre>/`) y categoría (`/tienda/<categoria>/`), JSON-LD, sitemap, feed de Merchant y fotos WebP, generados por el robot de GitHub cada hora (`pages.yml`).
+- Google Analytics 4 preparado (falta el ID del dueño) con aviso de cookies y eventos de conversión.
+- Pasos manuales del dueño: `docs/SEO.md`. En la fase 4 (Supabase) cambia solo la fuente de `catalogo.py` y `cargarCatalogo()`.
