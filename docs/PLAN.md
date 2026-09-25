@@ -75,5 +75,5 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Migración 2: buckets `productos` (público) y `evidencias` (privado), reglas solo-admin, `uso_almacenamiento()` y `archivos_huerfanos()`.
 - [x] Migración 3: funciones públicas `catalogo()` / `producto(id)` (se usan en la fase 4). Verificado desde internet: tablas y esquema `rinbo` no accesibles.
 - [x] Auth: registros abiertos desactivados.
-- [ ] Crear el usuario administrador (dueño, desde el panel de Supabase) y agregarlo a `rinbo.admins` → inicio de la fase 3.
+- [x] Usuario administrador `hola@rinbo.store` creado por el dueño en el panel y agregado a `rinbo.admins` (es_admin() verificado).
 - [ ] Rotar el JWT secret antiguo (salió en un registro de la sesión; base aún sin datos reales) — opcional, antes de la fase 3.
