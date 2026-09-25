@@ -1,0 +1,27 @@
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="7" result="t"/>
+      <feColorMatrix in="t" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.25" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in" result="c"/>
+      <feDisplacementMap in="c" in2="t" scale="2.4"/>
+    </filter>
+    <symbol id="hanko" viewBox="0 0 120 120">
+      <g filter="url(#ink)" fill="currentColor">
+        <circle cx="60" cy="60" r="55" fill="none" stroke="currentColor" stroke-width="5"/>
+        <circle cx="60" cy="60" r="47" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        <text x="60" y="56" text-anchor="middle" font-family="Zen Kaku Gothic New, Hiragino Sans, sans-serif" font-weight="900" font-size="34">輪</text>
+        <text x="60" y="92" text-anchor="middle" font-family="Zen Kaku Gothic New, Hiragino Sans, sans-serif" font-weight="900" font-size="34">宝</text>
+      </g>
+    </symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24"><path d="M10.5 21 12 17l-2-3-6 1v-2l6-3V5.5a2 2 0 0 1 4 0V10l6 3v2l-6-1-2 3 1.5 4z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 7h11M8 12h11M8 17h7M4.5 7h.01M4.5 12h.01M4.5 17h.01"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6.5A2.5 2.5 0 0 0 13.5 4h-7A2.5 2.5 0 0 0 4 6.5v7A2.5 2.5 0 0 0 6.5 16H8"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 19.5 5.3 15A8 8 0 1 1 9 18.7z"/></symbol>
+  </defs>
+</svg>

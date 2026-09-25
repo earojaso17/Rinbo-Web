@@ -1,0 +1,30 @@
+Seguimiento — RINBŌ Ichiba
+<main id="main" data-page="seguimiento">
+  <div class="wrap">
+    {CRUMBS:Seguimiento}
+    <header class="page-head has-route">
+      <div>
+        <span class="mono" style="color:var(--ai)">Seguimiento</span>
+        <h1 class="display" style="margin-top:.6rem">¿En qué va tu pedido?</h1>
+        {ROUTE}
+      </div>
+      <span class="vk" aria-hidden="true">追跡</span>
+    </header>
+    <div class="seg-grid">
+      <div class="panel">
+        <form class="seg-form" id="segForm">
+          <div class="field">
+            <label for="segCode">Código de pedido</label>
+            <input class="input" id="segCode" type="text" placeholder="R00000" autocomplete="off">
+          </div>
+          <button class="btn btn-ai" type="submit" style="justify-content:space-between">Consultar mi pedido <span class="ico"><svg class="i"><use href="#i-search"/></svg></span></button>
+        </form>
+        <div style="border-top:1px solid var(--line);margin-top:24px;padding-top:20px;display:grid;gap:12px;justify-items:start">
+          <p style="color:var(--ink-2)">¿Dudas o no tienes tu código?</p>
+          <a class="btn btn-line btn-sm" data-wa="¡Hola! Quiero saber el estado de mi pedido (código R-____)" href="#" target="_blank" rel="noopener">Consultar por WhatsApp <span class="ico"><svg class="i"><use href="#i-chat"/></svg></span></a>
+        </div>
+      </div>
+      <div id="segRes" aria-live="polite"></div>
+    </div>
+  </div>
+</main>

@@ -51,5 +51,20 @@ Decisión (opción C): mantener el DNS en Wix hasta la renovación (6 mar 2027) 
 ### Avance fase 1 (2026-09-25)
 - [x] Repo reordenado en `web/`, `admin/`, `supabase/` (rama `claude/exciting-lovelace-4xfghh`); workflow `pages.yml` publica solo `web/`.
 - [x] Proyecto Cloudflare Pages `rinbo-web` creado (Git, raíz `web`, sin build). Primer despliegue de `main` falla hasta que `main` tenga `web/` (esperado).
-- [ ] Verificar vista previa de la rama en `*.rinbo-web.pages.dev`.
-- [ ] GitHub Pages: Source = GitHub Actions, luego merge a `main` y verificar rinbo.store.
+- [x] Vista previa de la rama verificada en `*.rinbo-web.pages.dev` (igual a rinbo.store).
+- [x] GitHub Pages: Source = GitHub Actions; PR #1 unido a `main`; workflow OK; rinbo.store y rinbo-web.pages.dev verificados.
+- Rollback si hiciera falta: Revert del PR #1 + Source → "Deploy from a branch" `main` / `(root)`.
+- Desde ahora los archivos del sitio se editan en `web/` (p. ej. `web/js/app.js`).
+
+## Cambio de orden (2026-09-25): el rediseño (fase 7) se adelanta
+Decisión del dueño: aplicar ya el nuevo diseño (maqueta en `docs/diseno/mockup/`), conectado a la planilla actual. La fase 2 (Supabase) queda en pausa sin nada creado.
+- Rama `claude/rediseno-web` → vista previa en Cloudflare Pages. rinbo.store no cambia hasta que el dueño apruebe y se una a `main`.
+- `web/` ahora se genera con `web-plantillas/armar.py`; la lógica está en `web/js/rinbo.js` y `cargarCatalogo()` es la única pieza a cambiar en la fase 4.
+- Se mantiene: links `producto.html?id=X`, cotización guardada (`rinbo_cotizacion_v3`), WhatsApp, lectura de SegPublica (solo lectura), etiquetas og:*, CNAME, sitemap, robots, _headers.
+- Rollback cuando esté en `main`: Revert del PR del rediseño (vuelve el sitio anterior en ~2 min).
+
+## SEO / SEM (2026-09-25)
+Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas).
+- Páginas estáticas por producto (`/producto/<nombre>/`) y categoría (`/tienda/<categoria>/`), JSON-LD, sitemap, feed de Merchant y fotos WebP, generados por el robot de GitHub cada hora (`pages.yml`).
+- Google Analytics 4 preparado (falta el ID del dueño) con aviso de cookies y eventos de conversión.
+- Pasos manuales del dueño: `docs/SEO.md`. En la fase 4 (Supabase) cambia solo la fuente de `catalogo.py` y `cargarCatalogo()`.
