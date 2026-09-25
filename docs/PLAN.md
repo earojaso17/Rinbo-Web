@@ -90,6 +90,6 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Robot lee el catálogo desde Supabase (`public.catalogo()`, llave pública) cuando `CONFIG.fuenteCatalogo = "supabase"`; comparado contra la planilla: mismos 15 productos, mismo orden, mismos datos.
 - [x] Robot cada 15 min (publica solo si cambió algo).
 - [x] Admin: "Traer productos que faltan" desde la planilla (incluye no publicados) y link "Ver en rinbo.store".
-- [x] Admin: botón "Publicar cambios ahora" (Cloudflare Pages Function + secreto GITHUB_TOKEN; falta que el dueño cree el token y lo guarde en Cloudflare).
+- [x] Admin: botón "Publicar cambios ahora" (Cloudflare Pages Function + secreto GITHUB_TOKEN, configurado por el dueño el 2026-09-25).
 - [ ] Revisión del dueño en la vista previa y publicación. Desde ese día la planilla deja de editarse (queda de respaldo).
 - Volver atrás: `fuenteCatalogo: "planilla"` en web/js/rinbo.js (+ armar.py) o Revert del PR.
