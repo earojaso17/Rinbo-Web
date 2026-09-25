@@ -22,10 +22,28 @@ Decisiones fijas: Supabase (proyecto "rinbo", São Paulo, RLS, tablas no expuest
 10. Exportaciones JSON/CSV.
 11. Cierre: despublicar Sheets, docs, revisión de seguridad.
 
-## Fase 1 — pasos
-1. Inventario de TODOS los registros DNS actuales en Wix.
-2. Cuenta Cloudflare + agregar rinbo.store (plan Free); comparar lo que Cloudflare detecta con el inventario y completar.
-3. Cambiar nameservers en Wix → Cloudflare, con el sitio aún apuntando a GitHub Pages (solo cambia el DNS).
-4. Pruebas de correo (envío y recepción en hola@ y pedidos@) y de DNS.
-5. Mover el sitio a `web/`, crear proyecto Cloudflare Pages, validar en *.pages.dev.
-6. Conectar rinbo.store y www a Cloudflare Pages; apagar GitHub Pages.
+## Cambio de estrategia (2026-09-25): el dominio se queda en Wix hasta marzo 2027
+Wix NO permite cambiar los nameservers de un dominio comprado con ellos (NS "no editables").
+Decisión (opción C): mantener el DNS en Wix hasta la renovación (6 mar 2027) y ahí transferir el dominio a otro registrador (p. ej. Porkbun/Namecheap), pagando la transferencia en lugar de la renovación.
+- Hasta entonces: producción de la web pública sigue en GitHub Pages (rinbo.store). La Admin vive en Cloudflare Pages (`*.pages.dev`) protegida con Cloudflare Access. La web puede tener vistas previas en Cloudflare Pages (`*.pages.dev`) sin dominio.
+- No editar el DNS en Wix salvo necesidad; nunca usar "Reintentar" ni "Asignar a un sitio" en Wix (reapuntaría el dominio a Wix).
+- Zona rinbo.store en Cloudflare quedó creada (pendiente, NS asignados javier/sandy.ns.cloudflare.com) con los 12 registros; si Cloudflare la elimina por inactividad, se vuelve a agregar en 2027.
+
+### Inventario DNS (Wix, 2026-09-25) — 12 registros
+- A @ → 185.199.108.153 / .109.153 / .110.153 / .111.153 (GitHub Pages)
+- CNAME www → earojaso17.github.io
+- MX @ → mx.zoho.jp (10), mx2.zoho.jp (20), mx3.zoho.jp (30)
+- TXT @ → `v=spf1 include:zohomail.jp ~all`
+- TXT @ → `zoho-verification=zb48415574.zmverify.zoho.jp`
+- TXT @ → `google-site-verification=tBfeY1nW42hefcrg_v7cypP8ew1cvg0ZZkwec4YV8uM`
+- TXT zmail._domainkey → DKIM RSA 1024 (`v=DKIM1; k=rsa; p=MIGfMA0…RRaoiwIDAQAB`)
+- Sin DMARC (pendiente para el cierre, empezar con `p=none`).
+- DNSSEC: unsigned.
+- Correo: un solo buzón Zoho (región JP) hola@rinbo.store; contacto@rinbo.store es alias. (pedidos@ no existe.)
+- Línea base 2026-09-25: entrante OK (hola@, contacto@); saliente SPF PASS, DKIM PASS, DMARC FAIL (sin registro).
+
+### Fase final nueva: "Transferencia de dominio + web a Cloudflare" (feb–mar 2027, antes del 6 mar)
+1. Desbloquear dominio y pedir código de autorización en Wix; iniciar transferencia (tarda 5–7 días).
+2. Al completarse, cambiar de inmediato los NS a Cloudflare (la zona ya tiene los 12 registros) para que el correo no se caiga.
+3. Repetir la prueba de correo (entrante hola@/contacto@, saliente SPF/DKIM PASS).
+4. Conectar rinbo.store y www a Cloudflare Pages; apagar GitHub Pages; agregar DMARC.
