@@ -20,6 +20,7 @@ export function FilaPedido({ p }) {
           <small>{p.etapa} · {fechaCorta(p.actualizado_en)}</small>
           <span className="item-precio num">
             {fmt(p.total_clp)}
+            {p.total_clp > 0 && (p.costo_clp > 0 || p.impuestos_clp > 0) && <span className={"etiqueta " + (p.utilidad_clp < 0 ? "saldo" : "gana")}>Utilidad {fmt(p.utilidad_clp)}</span>}
             {p.saldo_clp > 0 ? <span className="etiqueta saldo">Debe {fmt(p.saldo_clp)}</span> : p.total_clp > 0 && <span className="etiqueta cl">Pagado</span>}
           </span>
         </span>
@@ -63,6 +64,17 @@ export default function Pedidos() {
           <p>{lista.length ? "No hay pedidos con ese filtro." : "Aún no hay pedidos. Crea el primero, o tráelos desde SegPublica en Inicio."}</p>
         </div>
       )}
+      {visibles.some(p => p.costo_clp > 0 || p.impuestos_clp > 0) && (() => {
+        const con = visibles.filter(p => p.costo_clp > 0 || p.impuestos_clp > 0);
+        const suma = k => con.reduce((s, p) => s + p[k], 0);
+        return (
+          <div className="tarjeta resumen-utilidad num">
+            <span>Utilidad de {con.length} pedido(s) con costos</span>
+            <b className={suma("utilidad_clp") < 0 ? "perdida" : ""}>{fmt(suma("utilidad_clp"))}</b>
+            <small>Ventas {fmt(suma("total_clp"))} · Costos {fmt(suma("costo_clp"))} · Impuestos {fmt(suma("impuestos_clp"))}</small>
+          </div>
+        );
+      })()}
       <ul className="lista">{visibles.map(p => <FilaPedido key={p.id} p={p} />)}</ul>
       <a className="enlace" href="#/clientes">Ver clientes →</a>
     </main>

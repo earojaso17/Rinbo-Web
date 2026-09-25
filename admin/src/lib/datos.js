@@ -1,7 +1,7 @@
 // Todo el acceso a Supabase de RINBŌ Admin está en este archivo.
 // Las tablas viven en el esquema privado "rinbo"; las reglas RLS dejan leer/escribir solo a administradores.
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, PLANILLA_CSV, SEGUIMIENTO_CSV, SITIO } from "../config.js";
+import { SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, PLANILLA_CSV, SITIO } from "../config.js";
 import { prepararFoto } from "./fotos.js";
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_LLAVE_PUBLICA, {
@@ -224,7 +224,7 @@ export const borrarCliente = id => db().from("clientes").delete().eq("id", id).t
 
 // ---------- Pedidos ----------
 export const listarPedidos = ({ clienteId } = {}) => {
-  let q = db().from("pedidos_resumen").select("id, codigo, codigo_seguimiento, cliente_id, cliente_nombre, cliente_whatsapp, etapa, total_clp, abonado_clp, saldo_clp, creado_en, actualizado_en");
+  let q = db().from("pedidos_resumen").select("id, codigo, codigo_seguimiento, cliente_id, cliente_nombre, cliente_whatsapp, etapa, total_clp, abonado_clp, saldo_clp, costo_clp, impuestos_clp, utilidad_clp, creado_en, actualizado_en");
   if (clienteId) q = q.eq("cliente_id", clienteId);
   return q.order("creado_en", { ascending: false }).then(ok);
 };
@@ -242,6 +242,7 @@ export const obtenerPedido = id => db().from("pedidos").select(DETALLE).eq("id",
 
 const limpiarPedido = p => ({
   cliente_id: p.cliente_id || null, total_clp: Math.max(0, aPesos(p.total_clp)),
+  costo_clp: Math.max(0, aPesos(p.costo_clp)), impuestos_clp: Math.max(0, aPesos(p.impuestos_clp)),
   comentarios_generales: texto(p.comentarios_generales), notas_internas: texto(p.notas_internas)
 });
 // Pedido nuevo: queda con la primera etapa (Encargo Confirmado) con fecha de hoy
@@ -316,44 +317,3 @@ export const linkSeguimiento = codigo => `${SITIO}/seguimiento.html#${codigo}`;
 export const mensajeSeguimiento = p =>
   `¡Hola${p.clientes?.nombre ? " " + p.clientes.nombre.split(" ")[0] : ""}! Aquí puedes ver en qué va tu pedido ${p.codigo} de RINBŌ Ichiba:\n${linkSeguimiento(p.codigo_seguimiento)}\n\nTu código de seguimiento es ${p.codigo_seguimiento} (guárdalo, es solo para ti).`;
 export const linkWhatsapp = (numero, mensaje) => `https://wa.me/${limpiarWhatsapp(numero) || ""}?text=${encodeURIComponent(mensaje)}`;
-
-// ---------- Importar pedidos desde SegPublica (una vez, al pasarse a la Admin) ----------
-// Solo agrega los códigos que aún no existen. Cada fila crea: pedido con el mismo código (R00123),
-// su etapa actual con fecha y comentario, el abono como un pago y las fotos de evidencia como links de Drive.
-function aFecha(t) {
-  const s = String(t || "").trim();
-  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
-  m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);   // 25/09/2026 (día primero, como en Chile)
-  if (m) return `${m[3].length === 2 ? "20" + m[3] : m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
-  return null;
-}
-export async function importarSegPublica() {
-  const res = await fetch(SEGUIMIENTO_CSV, { cache: "no-store" });
-  if (!res.ok) throw new Error("No se pudo leer SegPublica (HTTP " + res.status + ").");
-  const filas = parseCSV(await res.text()).filter(r => r.codigo);
-  const existentes = new Set((await db().from("pedidos").select("codigo").then(ok)).map(p => p.codigo));
-  const r = { total: filas.length, nuevos: 0, yaEstaban: 0, errores: [] };
-  for (const f of filas) {
-    const codigo = f.codigo.toUpperCase().replace(/[^A-Z0-9]/g, "");
-    if (!codigo) continue;
-    if (existentes.has(codigo)) { r.yaEstaban++; continue; }
-    const etapa = ETAPAS.find(e => sinTildes(e) === sinTildes(f.etapa));
-    try {
-      const p = await db().from("pedidos").insert({
-        codigo, total_clp: nro(f.total_clp), comentarios_generales: texto(f.comentarios_generales),
-        notas_internas: "Importado de SegPublica" + (etapa ? "" : ` (etapa en la planilla: "${f.etapa}")`)
-      }).select("id").single().then(ok);
-      try {
-        const fecha = aFecha(f.fecha_etapa);
-        const comentario = [texto(f.comentario), !fecha && texto(f.fecha_etapa) ? `(fecha: ${f.fecha_etapa})` : null].filter(Boolean).join("\n") || null;
-        await db().from("pedido_etapas").insert({ pedido_id: p.id, etapa: etapa || ETAPAS[0], fecha: fecha || undefined, comentario }).then(ok);
-        if (nro(f.abonado_clp)) await db().from("pagos").insert({ pedido_id: p.id, monto_clp: nro(f.abonado_clp), nota: "Abonado según SegPublica" }).then(ok);
-        const evid = [f.evidencia_1, f.evidencia_2, f.evidencia_3].filter(u => /^https?:\/\//.test(u || ""));
-        if (evid.length) await db().from("evidencias").insert(evid.map(u => ({ pedido_id: p.id, url_externa: u }))).then(ok);
-      } catch (e) { await db().from("pedidos").delete().eq("id", p.id); throw e; }
-      existentes.add(codigo); r.nuevos++;
-    } catch (e) { r.errores.push(`${codigo}: ${mensajeError(e)}`); }
-  }
-  return r;
-}

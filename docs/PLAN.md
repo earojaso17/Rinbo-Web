@@ -100,7 +100,9 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Admin: Pedidos, Clientes, ficha de pedido (etapas, pagos, fotos, artículos, link de seguimiento por WhatsApp) e importación desde SegPublica.
   Probado contra la base real con un admin temporal (borrado junto con los datos de prueba).
 - [x] Web: seguimiento con código secreto (ej. `K7QMX-4PAR9`) y link directo `rinbo.store/seguimiento.html#CÓDIGO`. Los códigos antiguos `R…` siguen leyendo SegPublica mientras esté publicada.
-- [ ] Dueño: en la Admin, "Traer pedidos que faltan" (SegPublica) → asignar cliente a cada pedido → "Enviar por WhatsApp" su link nuevo.
-- [ ] Cuando todos los clientes activos tengan su link nuevo: `seguimientoCsvUrl: ""` en web/js/rinbo.js (+ armar.py) y despublicar SegPublica
+- [x] Pedidos de SegPublica importados y luego descartados por decisión del dueño (la plantilla no se usaba bien). Contador en R00396 para no repetir códigos antiguos.
+- [x] `seguimientoCsvUrl: ""` (los códigos R… muestran "pide tu código nuevo") y botón de importar SegPublica quitado de la Admin.
+- [ ] Dueño: despublicar SegPublica
   (Archivo → Compartir → Publicar en la web → pestaña SegPublica → Dejar de publicar). Volver atrás: publicarla de nuevo y restaurar la URL.
 - Volver atrás de la fase 6 en la web: Revert del PR (la base y la Edge Function pueden quedar; no afectan a la web vieja).
+- [x] Control de utilidad por pedido (migración 6, 4 pruebas OK): precio de venta, costo del producto, impuestos pagados y utilidad (solo el dueño la ve).
