@@ -83,9 +83,20 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 - Vista previa: Cloudflare Pages, proyecto `rinbo-web` (directorio raíz `web`, sin comando de build). Cada rama tiene su URL `<rama>.rinbo-web.pages.dev`; `main` → `rinbo-web.pages.dev`. `web/_headers` marca `*.pages.dev` como noindex.
 - Para probar localmente: `cd web && python3 -m http.server` (fetch no funciona con `file://`).
 
+## Supabase (fase 2) — ver `supabase/README.md`
+
+- Proyecto `rinbo` (ref `mgxljvxjonopchpvmjkl`, São Paulo). SQL por Management API (`POST /v1/projects/<ref>/database/query`, token del entorno); la conexión directa a Postgres está bloqueada.
+- Esquema `rinbo`: expuesto en la Data API solo para la Admin, pero `anon` no tiene USAGE (visitantes reciben "permission denied") y RLS es solo-admins; la web solo puede usar `public.catalogo()` y `public.producto()`.
+- Toda migración: archivo en `supabase/migrations/`, ensayo con pruebas en una transacción que se deshace, y recién ahí aplicar.
+
+## admin/ (fase 3) — ver `admin/README.md`
+
+- RINBŌ Admin: Vite + React + supabase-js; acceso a datos solo en `admin/src/lib/datos.js` (esquema `rinbo`), compresión de fotos en `admin/src/lib/fotos.js`.
+- Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
+
 ## Convenciones
 
 - Español en textos, nombres de variables y funciones.
-- JS vanilla, sin frameworks. Fuentes de Google Fonts (Archivo, Geist, Geist Mono, Zen Kaku Gothic New).
+- Sitio público (`web/`): JS vanilla, sin frameworks. Fuentes de Google Fonts (Archivo, Geist, Geist Mono, Zen Kaku Gothic New).
 - Todo texto que venga de la planilla se escapa (`esc`/`saltos`) antes de insertarlo en el HTML.
 - SEO: no inventar textos (títulos/descripciones salen de textos existentes o de la planilla); "desde Japón a Chile", nunca ciudades de Japón; sin precios en yenes ni correo; contacto solo WhatsApp e Instagram. Guía para el dueño: `docs/SEO.md`.

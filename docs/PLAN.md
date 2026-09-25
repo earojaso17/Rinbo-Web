@@ -68,3 +68,20 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - Páginas estáticas por producto (`/producto/<nombre>/`) y categoría (`/tienda/<categoria>/`), JSON-LD, sitemap, feed de Merchant y fotos WebP, generados por el robot de GitHub cada hora (`pages.yml`).
 - Google Analytics 4 preparado (falta el ID del dueño) con aviso de cookies y eventos de conversión.
 - Pasos manuales del dueño: `docs/SEO.md`. En la fase 4 (Supabase) cambia solo la fuente de `catalogo.py` y `cargarCatalogo()`.
+
+### Avance fase 2 (2026-09-25)
+- [x] Rediseño + SEO/SEM publicados (PR #2). Sitemap reenviado en Search Console: 26 páginas. GA4 `G-S9EZ38B7C9` activo.
+- [x] Migración 1 aplicada: esquema privado `rinbo`, 9 tablas + `migraciones`, RLS en todas, 15 pruebas de seguridad OK (`supabase/pruebas/01_seguridad.sql`).
+- [x] Migración 2: buckets `productos` (público) y `evidencias` (privado), reglas solo-admin, `uso_almacenamiento()` y `archivos_huerfanos()`.
+- [x] Migración 3: funciones públicas `catalogo()` / `producto(id)` (se usan en la fase 4). Verificado desde internet: tablas y esquema `rinbo` no accesibles.
+- [x] Auth: registros abiertos desactivados.
+- [x] Usuario administrador `hola@rinbo.store` creado por el dueño en el panel y agregado a `rinbo.admins` (es_admin() verificado).
+- [ ] Rotar el JWT secret antiguo (salió en un registro de la sesión; base aún sin datos reales) — opcional, antes de la fase 3.
+
+### Avance fase 3 (2026-09-25)
+- [x] Migración 4: `rinbo.ordenar_fotos()` (reordenar fotos en un paso; 3 pruebas OK).
+- [x] App `admin/` (Vite + React): entrar, inicio con espacio del plan gratis, productos (buscar, filtrar, publicar), ficha (todos los campos de la planilla + marca), fotos (compresión en el navegador, ordenar, borrar). Probada con una base simulada.
+- [x] Esquema `rinbo` expuesto en la Data API (lo hizo el dueño, opción A). Verificado: anon recibe "permission denied for schema rinbo" en tablas, inserción y funciones; `rpc/catalogo` sigue respondiendo.
+- [x] Cloudflare Pages "rinbo-admin" (raíz `admin`, `npm run build`, `dist`, NODE_VERSION 22) + Cloudflare Access: app self-hosted `rinbo-admin.pages.dev` y `*.rinbo-admin.pages.dev`, política "Solo dueño" (emails hola@rinbo.store y la cuenta Gmail del dueño; entra con "Cloudflare"). Sesión 1 semana.
+- [x] Prueba real con la cuenta hola@rinbo.store en la vista previa (entrar, productos importados).
+- [x] Catálogo publicado importado a Supabase (15 productos, 78 fotos como links de Drive) con `supabase/importar/desde_catalogo_web.py`. Es una COPIA: la web sigue leyendo la planilla hasta la fase 4. Los productos no publicados de la planilla no se importaron.
