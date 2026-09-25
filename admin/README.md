@@ -18,7 +18,7 @@ cd admin && npm install && npm run dev
 - Protegerlo con **Cloudflare Access** (Zero Trust → Access → Aplicación "Self-hosted" para `rinbo-admin.pages.dev`, política: solo `hola@rinbo.store`, código por correo).
 - `public/_headers`: noindex y no se puede incrustar en otros sitios.
 
-## Requisito en Supabase
+## Requisito en Supabase (hecho 2026-09-25)
 El esquema `rinbo` debe estar en **Exposed schemas** de la Data API (Project Settings → Data API). Es seguro: `anon` no tiene
 ningún permiso sobre `rinbo` y todas las tablas tienen RLS solo-admin. Sin eso, la app muestra
 "La base de datos aún no está habilitada para la Admin".

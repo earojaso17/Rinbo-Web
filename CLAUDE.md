@@ -86,7 +86,7 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 ## Supabase (fase 2) — ver `supabase/README.md`
 
 - Proyecto `rinbo` (ref `mgxljvxjonopchpvmjkl`, São Paulo). SQL por Management API (`POST /v1/projects/<ref>/database/query`, token del entorno); la conexión directa a Postgres está bloqueada.
-- Esquema privado `rinbo` (no expuesto), RLS solo admins; la web solo puede usar `public.catalogo()` y `public.producto()`.
+- Esquema `rinbo`: expuesto en la Data API solo para la Admin, pero `anon` no tiene USAGE (visitantes reciben "permission denied") y RLS es solo-admins; la web solo puede usar `public.catalogo()` y `public.producto()`.
 - Toda migración: archivo en `supabase/migrations/`, ensayo con pruebas en una transacción que se deshace, y recién ahí aplicar.
 
 ## admin/ (fase 3) — ver `admin/README.md`

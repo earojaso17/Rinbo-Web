@@ -81,6 +81,6 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 ### Avance fase 3 (2026-09-25)
 - [x] Migración 4: `rinbo.ordenar_fotos()` (reordenar fotos en un paso; 3 pruebas OK).
 - [x] App `admin/` (Vite + React): entrar, inicio con espacio del plan gratis, productos (buscar, filtrar, publicar), ficha (todos los campos de la planilla + marca), fotos (compresión en el navegador, ordenar, borrar). Probada con una base simulada.
-- [ ] Exponer el esquema `rinbo` en la Data API de Supabase (decisión del dueño; lo bloquea el entorno de Claude).
+- [x] Esquema `rinbo` expuesto en la Data API (lo hizo el dueño, opción A). Verificado: anon recibe "permission denied for schema rinbo" en tablas, inserción y funciones; `rpc/catalogo` sigue respondiendo.
 - [ ] Cloudflare Pages "rinbo-admin" + Cloudflare Access (dueño, con guía).
 - [ ] Prueba real con la cuenta hola@rinbo.store.
