@@ -85,3 +85,11 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - [x] Cloudflare Pages "rinbo-admin" (raíz `admin`, `npm run build`, `dist`, NODE_VERSION 22) + Cloudflare Access: app self-hosted `rinbo-admin.pages.dev` y `*.rinbo-admin.pages.dev`, política "Solo dueño" (emails hola@rinbo.store y la cuenta Gmail del dueño; entra con "Cloudflare"). Sesión 1 semana.
 - [x] Prueba real con la cuenta hola@rinbo.store en la vista previa (entrar, productos importados).
 - [x] Catálogo publicado importado a Supabase (15 productos, 78 fotos como links de Drive) con `supabase/importar/desde_catalogo_web.py`. Es una COPIA: la web sigue leyendo la planilla hasta la fase 4. Los productos no publicados de la planilla no se importaron.
+
+### Fase 4 (2026-09-25) — rama `claude/fase4-catalogo`
+- [x] Robot lee el catálogo desde Supabase (`public.catalogo()`, llave pública) cuando `CONFIG.fuenteCatalogo = "supabase"`; comparado contra la planilla: mismos 15 productos, mismo orden, mismos datos.
+- [x] Robot cada 15 min (publica solo si cambió algo).
+- [x] Admin: "Traer productos que faltan" desde la planilla (incluye no publicados) y link "Ver en rinbo.store".
+- [x] Admin: botón "Publicar cambios ahora" (Cloudflare Pages Function + secreto GITHUB_TOKEN, configurado por el dueño el 2026-09-25 en Production y Preview).
+- [ ] Revisión del dueño en la vista previa y publicación. Desde ese día la planilla deja de editarse (queda de respaldo).
+- Volver atrás: `fuenteCatalogo: "planilla"` en web/js/rinbo.js (+ armar.py) o Revert del PR.

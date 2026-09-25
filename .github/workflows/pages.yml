@@ -1,12 +1,12 @@
 # Robot del catálogo + publicación de web/ en GitHub Pages (rinbo.store).
 # Requiere: Settings → Pages → Source = "GitHub Actions".
 #
-# 1) "catalogo": lee la planilla (CSV publicado) y las fotos de Google Drive, y rearma el sitio con
+# 1) "catalogo": lee el catálogo (RINBŌ Admin/Supabase, o la planilla si CONFIG.fuenteCatalogo = "planilla") y las fotos, y rearma el sitio con
 #    web-plantillas/armar.py --catalogo (páginas de productos y categorías, fotos WebP, sitemap.xml,
 #    feed de Google Merchant). Si algo cambió, lo guarda con un commit en la misma rama.
 # 2) "publicar": solo en main, sube web/ a GitHub Pages.
 #
-# Corre: cada hora, en cada push a main que toque el sitio, y a mano con "Run workflow"
+# Corre: cada 15 minutos, en cada push a main que toque el sitio, y a mano con "Run workflow"
 # (Actions → este workflow → Run workflow; se puede elegir otra rama para verla en la vista previa de Cloudflare).
 # Los commits que hace el robot no vuelven a disparar este workflow (así no se repite en bucle).
 name: Publicar web en GitHub Pages
@@ -16,7 +16,7 @@ on:
     branches: [main]
     paths: ['web/**', 'web-plantillas/**', '.github/workflows/pages.yml']
   schedule:
-    - cron: '17 * * * *'
+    - cron: '2,17,32,47 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
           python-version: '3.12'
       - name: Instalar Pillow (fotos WebP)
         run: pip install --quiet pillow
-      - name: Leer la planilla y rearmar el sitio
+      - name: Leer el catálogo y rearmar el sitio
         env:
           RAMA: ${{ github.ref_name }}
         run: |
@@ -55,12 +55,12 @@ jobs:
         run: |
           git add -A web web-plantillas/estado-catalogo.json
           if git diff --cached --quiet; then
-            echo "Sin cambios en la planilla."
+            echo "Sin cambios en el catálogo."
             echo "cambio=no" >> "$GITHUB_OUTPUT"
           else
             git config user.name "rinbo-robot"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git commit --quiet -m "Catálogo: actualizar desde la planilla"
+            git commit --quiet -m "Catálogo: actualizar"
             git push
             echo "cambio=si" >> "$GITHUB_OUTPUT"
           fi
