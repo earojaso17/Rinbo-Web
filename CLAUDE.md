@@ -94,6 +94,7 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 
 - RINBŌ Admin: Vite + React + supabase-js; acceso a datos solo en `admin/src/lib/datos.js` (esquema `rinbo`), compresión de fotos en `admin/src/lib/fotos.js`.
 - Inicio de la Admin: botón "Traer productos que faltan" (importa desde la planilla antigua, en el navegador del dueño, solo los códigos que no existen; opción avanzada para reemplazar). Cada producto publicado tiene link "Ver en rinbo.store".
+- Botón "Publicar cambios ahora" (Inicio y tras guardar): `admin/functions/api/publicar.js` (Cloudflare Pages Function) → `workflow_dispatch` de `pages.yml`; el token de GitHub es el secreto `GITHUB_TOKEN` de Cloudflare, nunca va al navegador.
 - Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
 
 ## Convenciones

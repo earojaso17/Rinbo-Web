@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { obtenerProducto, listarProductos, crearProducto, actualizarProducto, borrarProducto,
   subirFoto, borrarFoto, ordenar, urlPublica, urlEnLaWeb, mensajeError } from "../lib/datos.js";
 import { ir, Cargando } from "../lib/ui.jsx";
+import Publicar from "../lib/Publicar.jsx";
 
 const VACIO = { id: "", nombre: "", categoria_principal: "", categoria_secundaria: "", detalle: "", marca: "",
   opcion_1: "", opcion_2: "", descripcion: "", estado: "Nuevo", precio_clp: "", precio_oferta: "", stock: "En Japón",
@@ -110,7 +111,7 @@ export default function ProductoForm({ id }) {
       <a className="enlace" href="#/productos">← Productos</a>
       <h1 className="titulo">{nuevo ? "Nuevo producto" : form.nombre || "Producto"}</h1>
       {!nuevo && original?.publicado && (
-        <a className="enlace" href={urlEnLaWeb(original.nombre)} target="_blank" rel="noopener">Ver en rinbo.store ↗ <small>(los cambios aparecen en ~15 min)</small></a>
+        <a className="enlace" href={urlEnLaWeb(original.nombre)} target="_blank" rel="noopener">Ver en rinbo.store ↗ <small>(se actualiza sola cada 15 min, o con "Publicar cambios ahora")</small></a>
       )}
 
       <section className="tarjeta">
@@ -192,6 +193,7 @@ export default function ProductoForm({ id }) {
 
         {error && <p className="aviso error" role="alert">{error}</p>}
         {aviso && <p className="aviso ok">{aviso}</p>}
+        {aviso && <Publicar chico />}
         <div className="acciones">
           <button className="btn principal" disabled={guardando}>{guardando ? "Guardando…" : nuevo ? "Crear producto" : "Guardar cambios"}</button>
           {!nuevo && <button type="button" className="btn peligro" onClick={borrar}>Borrar</button>}

@@ -178,3 +178,16 @@ export async function importarPlanilla({ sobrescribir = false } = {}) {
 
 // Dirección del producto en rinbo.store (misma regla que el robot: nombre sin tildes, en minúsculas y con guiones)
 export const urlEnLaWeb = nombre => "https://rinbo.store/producto/" + sinTildes(nombre).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "/";
+
+// ---------- Publicar ahora (sin esperar al robot cada 15 min) ----------
+// Llama a /api/publicar (Cloudflare Pages Function), que pide a GitHub correr el robot. El token de GitHub vive en Cloudflare.
+async function llamarPublicar(metodo) {
+  const { data } = await supabase.auth.getSession();
+  const res = await fetch("/api/publicar", { method: metodo, headers: { Authorization: `Bearer ${data.session?.access_token || ""}` } });
+  let cuerpo = {};
+  try { cuerpo = await res.json(); } catch { /* respuesta vacía (p. ej. en `npm run dev`, sin funciones) */ }
+  if (!res.ok) throw new Error(cuerpo.error || `No se pudo publicar (HTTP ${res.status}).`);
+  return cuerpo;
+}
+export const publicarAhora = () => llamarPublicar("POST");
+export const estadoPublicacion = () => llamarPublicar("GET");

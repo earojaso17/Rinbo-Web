@@ -22,3 +22,10 @@ cd admin && npm install && npm run dev
 El esquema `rinbo` debe estar en **Exposed schemas** de la Data API (Project Settings → Data API). Es seguro: `anon` no tiene
 ningún permiso sobre `rinbo` y todas las tablas tienen RLS solo-admin. Sin eso, la app muestra
 "La base de datos aún no está habilitada para la Admin".
+
+## Botón "Publicar cambios ahora"
+- `functions/api/publicar.js` es una **Cloudflare Pages Function** (corre en Cloudflare, no en el navegador): exige la sesión de un
+  admin (`rinbo.es_admin()`) y pide a GitHub correr el workflow `pages.yml` en `main` (`workflow_dispatch`). `GET` devuelve el estado.
+- Necesita el secreto **`GITHUB_TOKEN`** en Cloudflare (rinbo-admin → Settings → Variables and Secrets, tipo *Secret*):
+  token *fine-grained* de GitHub, solo repo `Rinbo-Web`, permiso **Actions: Read and write**. Vence: renovarlo antes de la fecha elegida.
+- En `npm run dev` no hay funciones: el botón muestra un error (normal).

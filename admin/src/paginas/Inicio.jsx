@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Publicar from "../lib/Publicar.jsx";
 import { usoAlmacenamiento, borrarArchivosHuerfanos, importarPlanilla, mensajeError } from "../lib/datos.js";
 
 const mb = b => (b / 1024 / 1024).toLocaleString("es-CL", { maximumFractionDigits: b < 10 * 1024 * 1024 ? 1 : 0 }) + " MB";
@@ -71,6 +72,11 @@ export default function Inicio({ correo }) {
             {aviso && <p className="aviso ok">{aviso}</p>}
           </section>
           <a className="btn principal ancho" href="#/productos/nuevo">+ Nuevo producto</a>
+          <section className="tarjeta">
+            <h2 className="subtitulo">rinbo.store</h2>
+            <p className="ayuda">La web se actualiza sola cada 15 minutos con lo que guardas aquí. Si no quieres esperar, publica ahora.</p>
+            <Publicar />
+          </section>
           <section className="tarjeta">
             <h2 className="subtitulo">Planilla de Google</h2>
             <p className="ayuda">Trae a la Admin los productos de tu planilla antigua que todavía no están aquí (también los no publicados). No cambia los que ya existen.</p>

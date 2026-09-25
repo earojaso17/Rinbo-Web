@@ -137,3 +137,4 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--ai); outlin
   .menu-inferior { left: 50%; right: auto; transform: translateX(-50%); width: 420px; bottom: 16px; border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.08); }
   .acciones { bottom: 96px; }
 }
+.publicar { display: grid; gap: 8px; }
