@@ -68,3 +68,10 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - Páginas estáticas por producto (`/producto/<nombre>/`) y categoría (`/tienda/<categoria>/`), JSON-LD, sitemap, feed de Merchant y fotos WebP, generados por el robot de GitHub cada hora (`pages.yml`).
 - Google Analytics 4 preparado (falta el ID del dueño) con aviso de cookies y eventos de conversión.
 - Pasos manuales del dueño: `docs/SEO.md`. En la fase 4 (Supabase) cambia solo la fuente de `catalogo.py` y `cargarCatalogo()`.
+
+### Avance fase 2 (2026-09-25)
+- [x] Rediseño + SEO/SEM publicados (PR #2). Sitemap reenviado en Search Console: 26 páginas. GA4 `G-S9EZ38B7C9` activo.
+- [x] Migración 1 aplicada: esquema privado `rinbo`, 9 tablas + `migraciones`, RLS en todas, 15 pruebas de seguridad OK (`supabase/pruebas/01_seguridad.sql`).
+- [ ] Migración 2: buckets `productos` (público) y `evidencias` (privado) + control de almacenamiento.
+- [ ] Funciones públicas `catalogo()` / `producto(id)` (se usan en la fase 4).
+- [ ] Auth: desactivar registros abiertos y crear el usuario administrador (antes de la fase 3).

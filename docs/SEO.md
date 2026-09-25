@@ -14,7 +14,7 @@
 ### 1. Google Search Console (ya lo tienes)
 Tu dominio ya está verificado (registro `google-site-verification` en el DNS de Wix; no lo borres).
 1. Entra a https://search.google.com/search-console y elige la propiedad **rinbo.store**.
-2. Menú **Sitemaps** → escribe `sitemap.xml` → **Enviar**.
+2. Menú **Sitemaps** → en "Añadir un sitemap" escribe la dirección completa `https://rinbo.store/sitemap.xml` → **Enviar** (la propiedad es de tipo dominio: solo `sitemap.xml` da "dirección no válida"). Hecho el 2026-09-25: 26 páginas descubiertas.
 3. (Opcional) Menú **Inspección de URLs** → pega la dirección de un producto → **Solicitar indexación**, para acelerar.
 
 ### 2. Google Merchant Center (aparecer gratis en Shopping)
