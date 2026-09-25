@@ -47,3 +47,9 @@ Decisión (opción C): mantener el DNS en Wix hasta la renovación (6 mar 2027) 
 2. Al completarse, cambiar de inmediato los NS a Cloudflare (la zona ya tiene los 12 registros) para que el correo no se caiga.
 3. Repetir la prueba de correo (entrante hola@/contacto@, saliente SPF/DKIM PASS).
 4. Conectar rinbo.store y www a Cloudflare Pages; apagar GitHub Pages; agregar DMARC.
+
+### Avance fase 1 (2026-09-25)
+- [x] Repo reordenado en `web/`, `admin/`, `supabase/` (rama `claude/exciting-lovelace-4xfghh`); workflow `pages.yml` publica solo `web/`.
+- [x] Proyecto Cloudflare Pages `rinbo-web` creado (Git, raíz `web`, sin build). Primer despliegue de `main` falla hasta que `main` tenga `web/` (esperado).
+- [ ] Verificar vista previa de la rama en `*.rinbo-web.pages.dev`.
+- [ ] GitHub Pages: Source = GitHub Actions, luego merge a `main` y verificar rinbo.store.
