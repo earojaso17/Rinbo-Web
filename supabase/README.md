@@ -58,3 +58,7 @@ Al reconectar WhatsApp, Meta mandó ~1.650 avisos por minuto; el buzón hacía 3
 (Admin y seguimiento caídos ~10 min; la web pública siguió bien). Se reinició el proyecto (Management API `POST /v1/projects/<ref>/restart`),
 el buzón pasó a una sola llamada (`guardar_aviso_whatsapp`, 503 si la base no responde en 10 s → YCloud reintenta) y los avisos
 respaldados sin convertir se procesaron con `mantenimiento/reprocesar_whatsapp_eventos.sql`.
+- Refuerzo posterior (buzón v11): hasta 4 intentos internos (0,5 s / 1,5 s / 3 s) antes de responder 503, y el aviso completo se guarda
+  solo en `whatsapp_eventos` (no se duplica en cada mensaje). Prueba de carga con una copia temporal: **5.000 avisos a 100 por segundo →
+  5.000 guardados, 0 errores** (mediana 250 ms, p95 550 ms). YCloud reintentó por su cuenta los avisos fallidos ~30 min después
+  (14:42–14:44 UTC, 1.494 avisos): historial fase 1 al 100 %.
