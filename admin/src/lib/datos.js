@@ -332,6 +332,8 @@ export const vistos = () => { try { return JSON.parse(localStorage.getItem(CLAVE
 export const marcarVisto = (telefono, fecha) => {
   try { const v = vistos(); v[telefono] = fecha; localStorage.setItem(CLAVE_VISTOS, JSON.stringify(v)); } catch { /* sin almacenamiento */ }
 };
+
+// ============================================================
 // Fase 10: resumen por mes y exportación a Excel
 // ============================================================
 // Todo lo que necesitan el resumen de Inicio y el Excel, en una sola lectura
