@@ -16,6 +16,7 @@ export function mensajeError(e) {
   if (/Invalid login credentials/i.test(m)) return "Correo o contraseña incorrectos.";
   if (/Email not confirmed/i.test(m)) return "El correo aún no está confirmado.";
   if (/duplicate key.*productos_pkey/i.test(m)) return "Ya existe un producto con ese código.";
+  if (/etiquetas_nombre_key/i.test(m)) return "Ya existe una etiqueta con ese nombre.";
   if (/pedidos_codigo_key/i.test(m)) return "Ya existe un pedido con ese código.";
   if (/pedidos_cliente_id_fkey/i.test(m)) return "Este cliente tiene pedidos: cámbialos de cliente o bórralos primero.";
   if (/monto_clp_check/i.test(m)) return "El monto no puede ser 0.";
@@ -411,3 +412,19 @@ export async function exportarExcel() {
   await writeXlsxFile(hojas, { fontFamily: "Calibri", fontSize: 11 }).toFile(nombre);
   return nombre;
 }
+
+// ---------- Etiquetas de chats (solo en la Admin; no se sincronizan con el celular) ----------
+export const COLORES_ETIQUETA = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
+export const listarEtiquetas = () => db().from("etiquetas").select("*").order("orden").order("nombre").then(ok);
+export const crearEtiqueta = (nombre, color) => db().from("etiquetas").insert({ nombre: nombre.trim(), color }).then(ok);
+export const actualizarEtiqueta = (id, cambios) => db().from("etiquetas").update(cambios).eq("id", id).then(ok);
+export const borrarEtiqueta = id => db().from("etiquetas").delete().eq("id", id).then(ok);
+// { "56912345678": [idEtiqueta, …], … }
+export async function etiquetasDeChats() {
+  const filas = await db().from("chat_etiquetas").select("telefono, etiqueta_id").then(ok);
+  const mapa = {};
+  for (const f of filas) (mapa[f.telefono] ||= []).push(f.etiqueta_id);
+  return mapa;
+}
+export const ponerEtiqueta = (telefono, etiqueta_id) => db().from("chat_etiquetas").insert({ telefono, etiqueta_id }).then(ok);
+export const quitarEtiqueta = (telefono, etiqueta_id) => db().from("chat_etiquetas").delete().eq("telefono", telefono).eq("etiqueta_id", etiqueta_id).then(ok);

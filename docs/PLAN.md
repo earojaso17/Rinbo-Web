@@ -121,3 +121,5 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
   Preparado para reconectar: migración 8 (`whatsapp_eventos`, respaldo de cada aviso) + buzón que entiende `whatsapp.smb.history` (probado con una copia temporal: fechas originales, recibidos/enviados, listas, reintentos).
 - [ ] Dueño: reconectar (webhook activo ANTES) eligiendo compartir historial.
 - Las etiquetas/listas de WhatsApp Business no se sincronizan (Meta no las expone).
+- [x] Etiquetas propias para los chats (migración 10) + bandeja limpia (solo conversaciones por defecto) + chat tipo teléfono (cabecera fija, abre abajo).
+- Descartado por el dueño: importador de chats exportados (no lo hará chat por chat).

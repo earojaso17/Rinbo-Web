@@ -11,6 +11,7 @@ import Clientes from "./paginas/Clientes.jsx";
 import ClienteForm from "./paginas/ClienteForm.jsx";
 import Mensajes from "./paginas/Mensajes.jsx";
 import Chat from "./paginas/Chat.jsx";
+import Etiquetas from "./paginas/Etiquetas.jsx";
 import { Cargando } from "./lib/ui.jsx";
 
 // Rutas con # (funciona en cualquier hosting estático): #/ · #/productos[/nuevo|/<id>] · #/pedidos[/nuevo?cliente=<id>|/<id>] · #/clientes[/nuevo|/<id>]
@@ -64,6 +65,7 @@ export default function App() {
   else if (ruta.seccion === "clientes") pagina = <Clientes />;
   else if (ruta.seccion === "mensajes" && ruta.id) pagina = <Chat key={ruta.id} telefono={ruta.id} />;
   else if (ruta.seccion === "mensajes") pagina = <Mensajes />;
+  else if (ruta.seccion === "etiquetas") pagina = <Etiquetas />;
   else pagina = <Inicio correo={sesion.user.email} />;
 
   return (
@@ -78,7 +80,7 @@ export default function App() {
         <a href="#/productos" aria-current={ruta.seccion === "productos" ? "page" : undefined}><span className="jp">品</span>Productos</a>
         <a href="#/pedidos" aria-current={ruta.seccion === "pedidos" ? "page" : undefined}><span className="jp">注</span>Pedidos</a>
         <a href="#/clientes" aria-current={ruta.seccion === "clientes" ? "page" : undefined}><span className="jp">客</span>Clientes</a>
-        <a href="#/mensajes" aria-current={ruta.seccion === "mensajes" ? "page" : undefined}><span className="jp">話</span>Mensajes</a>
+        <a href="#/mensajes" aria-current={["mensajes", "etiquetas"].includes(ruta.seccion) ? "page" : undefined}><span className="jp">話</span>Mensajes</a>
       </nav>
     </>
   );

@@ -237,3 +237,42 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--ai); outlin
 .tabla th:first-child, .tabla td:first-child { text-align: left; }
 .tabla th { color: var(--muted); font-weight: 600; }
 @media (min-width: 720px) { .cifras { grid-template-columns: repeat(4, 1fr); } }
+
+/* Etiquetas de chats */
+.etiqueta-chat { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 0;
+  background: #fff; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink-2); font-size: .82rem; font-weight: 500; }
+button.etiqueta-chat { cursor: pointer; }
+button.etiqueta-chat:not(.activa) { opacity: .65; }
+.etiqueta-chat.activa { box-shadow: inset 0 0 0 1.5px var(--c); background: color-mix(in srgb, var(--c) 12%, #fff); color: var(--ink); }
+.etiqueta-chat.chica { padding: 1px 8px; font-size: .72rem; }
+.punto-color { width: 9px; height: 9px; border-radius: 50%; background: var(--c); flex: none; }
+.etiquetas-fila { display: flex; flex-wrap: wrap; gap: 4px; margin: 2px 0; }
+.etiquetas-chat { flex-wrap: wrap; align-items: center; }
+.etiqueta-fila { flex-wrap: wrap; gap: 10px; }
+.etiqueta-fila small { color: var(--muted); }
+.botones.derecha { margin-left: auto; gap: 14px; }
+.subform.ancho { width: 100%; }
+.colores { display: flex; flex-wrap: wrap; gap: 8px; }
+.colores .color { width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--c); cursor: pointer; box-shadow: 0 0 0 2px #fff, 0 0 0 3px transparent; }
+.colores .color.elegido { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--ink); }
+/* Avisos automáticos de WhatsApp dentro del chat */
+.chat .sistema .burbuja { justify-self: center; background: var(--sunk); box-shadow: none; max-width: 90%; }
+.chat .sistema .burbuja .tipo { font-style: italic; }
+
+/* Chat tipo teléfono: cabecera fija y solo la conversación se desplaza */
+.contenido:has(.chat-pagina) { padding-bottom: 0; }
+.chat-pagina { height: calc(100dvh - 51px - 64px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; gap: 0; padding: 0; }
+.chat-cabecera { flex: none; display: grid; gap: 10px; padding: 12px 16px; background: var(--tint); border-bottom: 1px solid var(--line); }
+.chat-titulo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.chat-titulo h1 { margin: 0; font-family: var(--f-display); font-weight: 800; font-size: 1.25rem; line-height: 1.15; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-titulo > div { min-width: 0; }
+.volver { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: #fff; box-shadow: inset 0 0 0 1px var(--line); text-decoration: none; font-size: 1.1rem; }
+.chat-cabecera .botones { flex-wrap: nowrap; overflow-x: auto; }
+.chat-cabecera .etiquetas-chat { flex-wrap: nowrap; overflow-x: auto; }
+.chat-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 12px 16px 16px; }
+.chat-inicio { display: grid; justify-items: center; gap: 4px; text-align: center; padding: 4px 0 12px; }
+@media (min-width: 720px) {
+  .chat-pagina { height: calc(100dvh - 51px - 96px); max-width: 760px; }
+}
+.chat-cabecera .btn { white-space: nowrap; flex: none; }
