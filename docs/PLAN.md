@@ -111,8 +111,13 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - Decisión: coexistencia vía **YCloud** (proveedor oficial con plan gratis; Meta no permite conectarla por cuenta propia sin ser proveedor). La app WhatsApp Business del celular sigue igual; solo lectura (nunca se envía desde la Admin).
 - [x] Migración 7 aplicada (6 pruebas OK). Edge Function `whatsapp-webhook` publicada y probada con avisos firmados (entrante, enviado desde la app, foto, repetido, evento ajeno).
 - [x] Admin: Mensajes + Chat + "Crear cliente" desde el chat + "Ver mensajes" en la ficha del cliente. Probado contra la base real (datos de prueba borrados).
-- [ ] Dueño: cuenta YCloud → conectar el número (coexistencia; confirmar que +81 lo permite) → webhook a `…/functions/v1/whatsapp-webhook` → secreto `YCLOUD_WEBHOOK_SECRET` en Supabase.
+- [x] Dueño (2026-09-26): número +81 conectado en YCloud con coexistencia (tras una revisión de cuenta de Meta por intentos fallidos; lo que funcionó: entrar a Meta con el Instagram vinculado al WhatsApp Business), webhook activo con todos los eventos de WhatsApp y `YCLOUD_WEBHOOK_SECRET` en Supabase. Verificado: llegan mensajes recibidos (`whatsapp.inbound_message.received`) y enviados desde la app (`whatsapp.smb.message.echoes`).
+- Ojo: el webhook de YCloud se crea **inactivo**; hay que activarlo.
 - Volver atrás: en la app WhatsApp Business desconectar la plataforma (YCloud); en la Admin, Revert del PR.
 ### Fase 10 (2026-09-25) — resumen y Excel, rama `claude/fase10-excel`
 - [x] Inicio de la Admin: cifras del mes, gráficos de pedidos y ganancia por mes, tabla por mes.
 - [x] "Descargar Excel": Pedidos, Artículos, Pagos, Clientes, Productos, Resumen por mes (24 meses). Probado con 30 pedidos de prueba en la base real (borrados).
+- Historial: Meta lo envía **una sola vez** al conectar (hasta 180 días). La primera conexión se hizo con el webhook inactivo y se perdió.
+  Preparado para reconectar: migración 8 (`whatsapp_eventos`, respaldo de cada aviso) + buzón que entiende `whatsapp.smb.history` (probado con una copia temporal: fechas originales, recibidos/enviados, listas, reintentos).
+- [ ] Dueño: reconectar (webhook activo ANTES) eligiendo compartir historial.
+- Las etiquetas/listas de WhatsApp Business no se sincronizan (Meta no las expone).
