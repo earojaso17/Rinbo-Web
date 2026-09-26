@@ -323,3 +323,24 @@ button.etiqueta-chat:not(.activa) { opacity: .65; }
 
 /* Filtros: siempre todos a la vista (bajan de línea, nunca hay que deslizar) */
 .chips { flex-wrap: wrap; overflow: visible; }
+
+/* Chat: la página completa se desliza (el celular esconde sus barras) y la cabecera queda pegada arriba */
+.contenido:has(.chat-pagina) { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+.chat-pagina { height: auto; min-height: calc(100dvh - 51px - 76px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; }
+.chat-cabecera { position: sticky; top: calc(51px + env(safe-area-inset-top, 0px)); z-index: 3; }
+.chat-scroll { flex: 1; min-height: 0; overflow: visible; display: flex; flex-direction: column; justify-content: flex-end; }
+@media (min-width: 720px) {
+  .contenido:has(.chat-pagina) { padding-bottom: 100px; }
+  .chat-pagina { height: auto; min-height: calc(100dvh - 51px - 100px); }
+}
+
+/* Cabecera del chat compacta */
+.chat-cabecera { gap: 8px; padding: 10px 16px; }
+.chat-titulo h1 { font-size: 1.1rem; }
+.chat-titulo .sobre { font-size: .8rem; }
+.volver { width: 32px; height: 32px; }
+.chat-cabecera .btn.chico { min-height: 32px; padding: 4px 12px; font-size: .82rem; }
+.crm-resumen { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; font: inherit; }
+.crm-abrir { font-size: .8rem; color: var(--muted); text-decoration: underline; margin-left: 2px; }
+.chat-opciones { display: grid; gap: 8px; max-height: 55dvh; overflow-y: auto; }
+.chat-opciones > .enlace { justify-self: start; font-size: .82rem; padding: 0; }
