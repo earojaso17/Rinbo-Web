@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { listarMensajes, listarConversaciones, borrarConversacion, marcarVisto, linkWhatsapp, listarEtiquetas, etiquetasDeChats, ponerEtiqueta, quitarEtiqueta, mensajeError } from "../lib/datos.js";
-import Etiqueta from "../lib/Etiqueta.jsx";
+import { listarMensajes, listarConversaciones, borrarConversacion, marcarVisto, linkWhatsapp, mensajeError } from "../lib/datos.js";
+import EtapasChat from "../lib/EtapasChat.jsx";
 import { ir, Cargando, fechaCorta } from "../lib/ui.jsx";
 import { resumenTipo } from "./Mensajes.jsx";
 
@@ -10,17 +10,6 @@ export default function Chat({ telefono }) {
   const [error, setError] = useState("");
   const caja = useRef(null);
   const abajo = useRef(true);
-  const [etiquetas, setEtiquetas] = useState([]);
-  const [mias, setMias] = useState([]);
-  useEffect(() => {
-    Promise.all([listarEtiquetas(), etiquetasDeChats()]).then(([e, a]) => { setEtiquetas(e); setMias(a[telefono] || []); }).catch(() => {});
-  }, [telefono]);
-  async function alternar(id) {
-    const tiene = mias.includes(id);
-    setMias(m => tiene ? m.filter(x => x !== id) : [...m, id]);
-    try { tiene ? await quitarEtiqueta(telefono, id) : await ponerEtiqueta(telefono, id); }
-    catch (e) { setError(mensajeError(e)); setMias(m => tiene ? [...m, id] : m.filter(x => x !== id)); }
-  }
 
   useEffect(() => {
     const cargar = () => Promise.all([listarMensajes(telefono), listarConversaciones()])
@@ -61,15 +50,10 @@ export default function Chat({ telefono }) {
         <div className="botones">
           {conv?.cliente_id
             ? <a className="btn chico" href={`#/clientes/${conv.cliente_id}`}>Ver cliente y pedidos</a>
-            : <a className="btn principal chico" href={`#/clientes/nuevo?whatsapp=${telefono}&nombre=${encodeURIComponent(conv?.nombre_perfil || "")}`}>+ Crear cliente</a>}
+            : <a className="btn principal chico" href={`#/clientes/nuevo?whatsapp=${telefono}&nombre=${encodeURIComponent(conv?.nombre_perfil || "")}&volver=${encodeURIComponent("/mensajes/" + telefono)}`}>+ Crear cliente</a>}
           <a className="btn chico" href={linkWhatsapp(telefono, "")} target="_blank" rel="noopener">Responder en WhatsApp</a>
         </div>
-        {etiquetas.length > 0 && (
-          <div className="chips etiquetas-chat" aria-label="Etiquetas del chat">
-            {etiquetas.map(e => <Etiqueta key={e.id} etiqueta={e} activa={mias.includes(e.id)} onClick={() => alternar(e.id)} />)}
-            <a className="enlace" href="#/etiquetas">Editar</a>
-          </div>
-        )}
+        <EtapasChat telefono={telefono} />
         {error && <p className="aviso error">{error}</p>}
       </header>
       <div className="chat-scroll" ref={caja}>

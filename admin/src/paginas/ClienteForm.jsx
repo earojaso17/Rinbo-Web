@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { obtenerCliente, crearCliente, actualizarCliente, borrarCliente, listarPedidos, linkWhatsapp, mensajeError } from "../lib/datos.js";
+import { obtenerCliente, crearCliente, actualizarCliente, borrarCliente, listarPedidos, linkWhatsapp, limpiarWhatsapp, mensajeError } from "../lib/datos.js";
 import { ir, Cargando } from "../lib/ui.jsx";
 import { FilaPedido } from "./Pedidos.jsx";
+import EtapasChat from "../lib/EtapasChat.jsx";
 
 export const CLIENTE_VACIO = { nombre: "", whatsapp: "", instagram: "", email: "", ciudad: "", notas: "" };
 const aForm = c => Object.fromEntries(Object.keys(CLIENTE_VACIO).map(k => [k, c[k] ?? ""]));
@@ -48,7 +49,7 @@ export default function ClienteForm({ id, inicial = {} }) {
     setGuardando(true); setError(""); setAviso("");
     try {
       const c = nuevo ? await crearCliente(form) : await actualizarCliente(id, form);
-      if (nuevo) { ir(`/clientes/${c.id}`); return; }
+      if (nuevo) { ir(inicial.volver || `/clientes/${c.id}`); return; }
       setForm(aForm(c)); setAviso("Guardado.");
     } catch (err) { setError(mensajeError(err)); }
     setGuardando(false);
@@ -76,9 +77,16 @@ export default function ClienteForm({ id, inicial = {} }) {
           {!nuevo && <button type="button" className="btn peligro" onClick={borrar}>Borrar</button>}
         </div>
       </form>
+      {!nuevo && form.whatsapp && (
+        <section className="tarjeta">
+          <h2 className="subtitulo">Seguimiento comercial</h2>
+          <EtapasChat telefono={limpiarWhatsapp(form.whatsapp)} conHistorial />
+          <a className="btn chico" href={`#/mensajes/${limpiarWhatsapp(form.whatsapp)}`}>Ver conversación de WhatsApp</a>
+        </section>
+      )}
       {!nuevo && (
         <section className="tarjeta">
-          <h2 className="subtitulo">Pedidos <small className="num">{pedidos.length}</small></h2>
+          <h2 className="subtitulo">Pedidos y envíos <small className="num">{pedidos.length}</small></h2>
           <ul className="lista">{pedidos.map(p => <FilaPedido key={p.id} p={p} />)}</ul>
           <a className="btn chico" href={`#/pedidos/nuevo?cliente=${id}`}>+ Nuevo pedido para este cliente</a>
         </section>

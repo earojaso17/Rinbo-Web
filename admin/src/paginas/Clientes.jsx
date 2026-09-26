@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { listarClientes, mensajeError } from "../lib/datos.js";
+import { listarClientes, listarEtiquetas, etiquetasDeChats, COLORES_ETIQUETA, mensajeError } from "../lib/datos.js";
+import Etiqueta from "../lib/Etiqueta.jsx";
 
 export default function Clientes() {
   const [lista, setLista] = useState(null);
   const [error, setError] = useState("");
   const [texto, setTexto] = useState("");
 
-  useEffect(() => { listarClientes().then(setLista).catch(e => setError(mensajeError(e))); }, []);
+  const [etapas, setEtapas] = useState({});
+  useEffect(() => {
+    listarClientes().then(setLista).catch(e => setError(mensajeError(e)));
+    Promise.all([listarEtiquetas(), etiquetasDeChats()]).then(([e, a]) => {
+      const porId = Object.fromEntries(e.filter(x => x.es_etapa).map(x => [x.id, x]));
+      setEtapas(Object.fromEntries(Object.entries(a).map(([tel, ids]) => [tel, ids.map(id => porId[id]).find(Boolean)]).filter(([, x]) => x)));
+    }).catch(() => {});
+  }, []);
 
   const visibles = useMemo(() => {
     const t = texto.trim().toLowerCase();
@@ -27,12 +35,13 @@ export default function Clientes() {
       )}
       <ul className="lista">
         {visibles.map(c => (
-          <li key={c.id} className="item">
+          <li key={c.id} className={"item" + (etapas[c.whatsapp] ? " con-etapa" : "")} style={etapas[c.whatsapp] ? { "--c": COLORES_ETIQUETA[etapas[c.whatsapp].color - 1] } : undefined}>
             <a className="item-link" href={`#/clientes/${c.id}`}>
               <span className="paso jp">{c.nombre.trim()[0]?.toUpperCase()}</span>
               <span className="item-texto">
                 <b>{c.nombre}</b>
                 <small>{[c.whatsapp && "+" + c.whatsapp, c.instagram, c.ciudad].filter(Boolean).join(" · ") || "Sin contacto"}</small>
+                {etapas[c.whatsapp] && <span className="etiquetas-fila"><Etiqueta etiqueta={etapas[c.whatsapp]} chica /></span>}
                 <small className="num">{c.pedidos?.[0]?.count || 0} pedido(s)</small>
               </span>
             </a>
