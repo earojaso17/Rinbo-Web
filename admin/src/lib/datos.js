@@ -416,7 +416,7 @@ export async function exportarExcel() {
 // ---------- Etiquetas de chats (solo en la Admin; no se sincronizan con el celular) ----------
 export const COLORES_ETIQUETA = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
 export const listarEtiquetas = () => db().from("etiquetas").select("*").order("orden").order("nombre").then(ok);
-export const crearEtiqueta = (nombre, color) => db().from("etiquetas").insert({ nombre: nombre.trim(), color }).then(ok);
+export const crearEtiqueta = (nombre, color, es_etapa = false) => db().from("etiquetas").insert({ nombre: nombre.trim(), color, es_etapa }).then(ok);
 export const actualizarEtiqueta = (id, cambios) => db().from("etiquetas").update(cambios).eq("id", id).then(ok);
 export const borrarEtiqueta = id => db().from("etiquetas").delete().eq("id", id).then(ok);
 // { "56912345678": [idEtiqueta, …], … }
@@ -428,3 +428,6 @@ export async function etiquetasDeChats() {
 }
 export const ponerEtiqueta = (telefono, etiqueta_id) => db().from("chat_etiquetas").insert({ telefono, etiqueta_id }).then(ok);
 export const quitarEtiqueta = (telefono, etiqueta_id) => db().from("chat_etiquetas").delete().eq("telefono", telefono).eq("etiqueta_id", etiqueta_id).then(ok);
+// Historial de etapas del CRM de un número (la base lo registra sola al cambiar de etapa)
+export const historialEtapas = telefono => db().from("chat_etapas_historial").select("id, etapa, etiqueta_id, cambiado_en")
+  .eq("telefono", telefono).order("cambiado_en", { ascending: false }).limit(50).then(ok);

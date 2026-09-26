@@ -123,3 +123,4 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - Las etiquetas/listas de WhatsApp Business no se sincronizan (Meta no las expone).
 - [x] Etiquetas propias para los chats (migración 10) + bandeja limpia (solo conversaciones por defecto) + chat tipo teléfono (cabecera fija, abre abajo).
 - Descartado por el dueño: importador de chats exportados (no lo hará chat por chat).
+- [x] CRM (migración 11): etapas Pendiente cotizar → Cotización enviada → Posible cliente → Pago recibido → Producto enviado, una por chat con historial; filtro y color por etapa en Mensajes y Clientes; ficha del cliente con seguimiento comercial, pedidos y envíos.
