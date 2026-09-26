@@ -52,6 +52,7 @@ No se publica en ningún sitio web.
 | 20260926000009 | `guardar_aviso_whatsapp()`: respaldo + mensajes en una sola llamada (solo servidor) | `pruebas/08_guardar_aviso_whatsapp.sql` (3 OK) |
 | 20260926000010 | etiquetas de chats (`etiquetas`, `chat_etiquetas`; solo admins; 7 de partida) | `pruebas/09_etiquetas_chats.sql` (4 OK) |
 | 20260926000011 | CRM: `etiquetas.es_etapa` (una etapa por chat, trigger `etapa_unica`), `chat_etapas_historial` (trigger `registrar_etapa`); 5 etapas de partida | `pruebas/10_crm_etapas.sql` (5 OK) |
+| 20260926000012 | `chat_estado`: oculto (automático/a mano), leído hasta, no leído a mano — en la base, igual en todos los dispositivos | `pruebas/11_chat_estado.sql` (3 OK) |
 
 ## Incidente 2026-09-26: historial de WhatsApp
 Al reconectar WhatsApp, Meta mandó ~1.650 avisos por minuto; el buzón hacía 3 llamadas por aviso y la API (PostgREST) se colgó
