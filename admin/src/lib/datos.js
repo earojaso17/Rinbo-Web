@@ -327,12 +327,37 @@ export const listarMensajes = telefono => db().from("whatsapp_mensajes")
   .select("id, wamid, direccion, tipo, texto, nombre_perfil, enviado_en").eq("telefono", telefono)
   .order("enviado_en").order("id").limit(1000).then(ok);
 export const borrarConversacion = telefono => db().from("whatsapp_mensajes").delete().eq("telefono", telefono).then(ok);
-// Chats vistos: se recuerda en este navegador la fecha del último mensaje leído de cada chat
-const CLAVE_VISTOS = "rinbo_admin_chats_vistos";
-export const vistos = () => { try { return JSON.parse(localStorage.getItem(CLAVE_VISTOS) || "{}"); } catch { return {}; } };
-export const marcarVisto = (telefono, fecha) => {
-  try { const v = vistos(); v[telefono] = fecha; localStorage.setItem(CLAVE_VISTOS, JSON.stringify(v)); } catch { /* sin almacenamiento */ }
-};
+// ---------- Estado de cada chat (en la base: se ve igual en el celular y en el computador) ----------
+// oculto: null = automático (oculto si el cliente nunca escribió), true/false = decidido a mano.
+// Sin leer = marcado a mano como no leído, o el último mensaje es del cliente y es más nuevo que lo ya visto.
+export async function estadosChats() {
+  const filas = await db().from("chat_estado").select("telefono, oculto, leido_hasta, no_leido").then(ok);
+  const mapa = Object.fromEntries(filas.map(f => [f.telefono, f]));
+  await traspasarVistosDelNavegador(mapa);
+  return mapa;
+}
+export const guardarEstadoChat = (telefono, cambios) =>
+  db().from("chat_estado").upsert({ telefono, ...cambios }, { onConflict: "telefono" }).then(ok);
+export const marcarLeido = (telefono, fecha) => guardarEstadoChat(telefono, { leido_hasta: fecha, no_leido: false });
+export const marcarNoLeido = telefono => guardarEstadoChat(telefono, { no_leido: true });
+export const ocultarChat = (telefono, oculto) => guardarEstadoChat(telefono, { oculto });
+export const estaOculto = (c, e) => e?.oculto ?? !(c.entrantes > 0);
+export const estaSinLeer = (c, e) => !!e?.no_leido || (c.ultima_direccion === "entrante" && (!e?.leido_hasta || new Date(e.leido_hasta) < new Date(c.ultimo_en)));
+// Varios chats a la vez: filas = [{ telefono, ...cambios }] (todas con los mismos campos)
+export const guardarEstadosChats = filas => filas.length ? db().from("chat_estado").upsert(filas, { onConflict: "telefono" }).then(ok) : Promise.resolve();
+
+// Una sola vez: lo leído que se guardaba en este navegador (versión anterior) pasa a la base
+async function traspasarVistosDelNavegador(mapa) {
+  let viejos = {};
+  try { viejos = JSON.parse(localStorage.getItem("rinbo_admin_chats_vistos") || "{}"); } catch { return; }
+  const filas = Object.entries(viejos).filter(([t, f]) => /^[0-9]{6,20}$/.test(t) && f && !mapa[t]?.leido_hasta)
+    .map(([telefono, leido_hasta]) => ({ telefono, leido_hasta, oculto: mapa[telefono]?.oculto ?? null, no_leido: mapa[telefono]?.no_leido ?? false }));
+  if (filas.length) {
+    await db().from("chat_estado").upsert(filas, { onConflict: "telefono" }).then(ok);
+    for (const f of filas) mapa[f.telefono] = { ...(mapa[f.telefono] || {}), ...f };
+  }
+  try { localStorage.removeItem("rinbo_admin_chats_vistos"); } catch { /* nada */ }
+}
 
 // ============================================================
 // Fase 10: resumen por mes y exportación a Excel
