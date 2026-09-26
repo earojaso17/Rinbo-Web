@@ -8,8 +8,8 @@ export default function Chat({ telefono }) {
   const [mensajes, setMensajes] = useState(null);
   const [conv, setConv] = useState(null);
   const [error, setError] = useState("");
-  const caja = useRef(null);
   const noLeidoManual = useRef(false);   // si lo marcas "no leído" estando dentro, no se vuelve a marcar leído solo
+  const [opciones, setOpciones] = useState(false);   // panel de etapa, etiquetas y ocultar/no leído
   const [estado, setEstado] = useState(null);
   const [aviso, setAviso] = useState("");
   useEffect(() => { estadosChats().then(st => setEstado(st[telefono] || {})).catch(() => setEstado({})); }, [telefono]);
@@ -24,18 +24,24 @@ export default function Chat({ telefono }) {
     const t = setInterval(cargar, 30000);
     return () => clearInterval(t);
   }, [telefono]);
-  // Abre en el último mensaje (como en el teléfono); si llegan mensajes nuevos, baja solo si ya estabas abajo
+  // Abre en el último mensaje (como en el teléfono); si llegan mensajes nuevos, baja solo si ya estabas abajo.
+  // Se desliza la página completa (no una caja interna): así en el celular Safari/Chrome esconden sus barras y el chat usa toda la pantalla.
+  // La primera vez siempre baja (aunque el navegador haya movido la página al cambiar de pantalla), y repite un momento
+  // después por si algo terminó de dibujarse más tarde.
+  const primeraVez = useRef(true);
   useEffect(() => {
-    const c = caja.current;
-    if (c && abajo.current) c.scrollTop = c.scrollHeight;
+    if (!mensajes?.length || !(primeraVez.current || abajo.current)) return;
+    primeraVez.current = false; abajo.current = true;
+    const bajar = () => window.scrollTo(0, document.documentElement.scrollHeight);
+    requestAnimationFrame(bajar);
+    const t = setTimeout(() => { if (abajo.current) bajar(); }, 300);
+    return () => clearTimeout(t);
   }, [mensajes?.length]);
   useEffect(() => {
-    const c = caja.current;
-    if (!c) return;
-    const alMover = () => { abajo.current = c.scrollHeight - c.scrollTop - c.clientHeight < 80; };
-    c.addEventListener("scroll", alMover, { passive: true });
-    return () => c.removeEventListener("scroll", alMover);
-  }, [!!mensajes]);
+    const alMover = () => { abajo.current = document.documentElement.scrollHeight - window.scrollY - window.innerHeight < 120; };
+    addEventListener("scroll", alMover, { passive: true });
+    return () => removeEventListener("scroll", alMover);
+  }, []);
 
   if (error && !mensajes) return <main className="pagina"><p className="aviso error">{error}</p><a className="enlace" href="#/mensajes">← Mensajes</a></main>;
   if (!mensajes) return <Cargando />;
@@ -58,22 +64,28 @@ export default function Chat({ telefono }) {
             : <a className="btn principal chico" href={`#/clientes/nuevo?whatsapp=${telefono}&nombre=${encodeURIComponent(conv?.nombre_perfil || "")}&volver=${encodeURIComponent("/mensajes/" + telefono)}`}>+ Crear cliente</a>}
           <a className="btn chico" href={linkWhatsapp(telefono, "")} target="_blank" rel="noopener">Responder en WhatsApp</a>
         </div>
-        {estado && conv && (
-          <div className="botones acciones-estado">
-            <button className="enlace" onClick={async () => {
-              const o = !estaOculto(conv, estado);
-              try { await ocultarChat(telefono, o); setEstado(e => ({ ...e, oculto: o })); avisar(o ? "Chat ocultado" : "Chat visible otra vez"); } catch (e) { setError(mensajeError(e)); }
-            }}>{estaOculto(conv, estado) ? "👁 Mostrar chat" : "🙈 Ocultar chat"}</button>
-            <button className="enlace" onClick={async () => {
-              try { await marcarNoLeido(telefono); noLeidoManual.current = true; setEstado(e => ({ ...e, no_leido: true })); avisar("Marcado como no leído"); } catch (e) { setError(mensajeError(e)); }
-            }}>● Marcar como no leído</button>
+        {!opciones && <EtapasChat key="resumen" telefono={telefono} soloResumen onAbrir={() => setOpciones(true)} />}
+        {opciones && (
+          <div className="chat-opciones">
+            {estado && conv && (
+              <div className="botones acciones-estado">
+                <button className="enlace" onClick={async () => {
+                  const o = !estaOculto(conv, estado);
+                  try { await ocultarChat(telefono, o); setEstado(e => ({ ...e, oculto: o })); avisar(o ? "Chat ocultado" : "Chat visible otra vez"); } catch (e) { setError(mensajeError(e)); }
+                }}>{estaOculto(conv, estado) ? "👁 Mostrar chat" : "🙈 Ocultar chat"}</button>
+                <button className="enlace" onClick={async () => {
+                  try { await marcarNoLeido(telefono); noLeidoManual.current = true; setEstado(e => ({ ...e, no_leido: true })); avisar("Marcado como no leído"); } catch (e) { setError(mensajeError(e)); }
+                }}>● Marcar como no leído</button>
+              </div>
+            )}
+            {aviso && <p className="aviso ok">{aviso}</p>}
+            <EtapasChat key="panel" telefono={telefono} />
+            <button type="button" className="enlace" onClick={() => setOpciones(false)}>Cerrar ▴</button>
           </div>
         )}
-        {aviso && <p className="aviso ok">{aviso}</p>}
-        <EtapasChat telefono={telefono} />
         {error && <p className="aviso error">{error}</p>}
       </header>
-      <div className="chat-scroll" ref={caja}>
+      <div className="chat-scroll">
         <div className="chat-inicio">
           <p className="ayuda">Inicio de la copia de este chat. Las fotos, audios y videos no se copian aquí: se ven en tu app de WhatsApp.</p>
           <button className="enlace" onClick={async () => {

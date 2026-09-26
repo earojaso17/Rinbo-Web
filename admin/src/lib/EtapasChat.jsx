@@ -4,7 +4,7 @@ import Etiqueta from "./Etiqueta.jsx";
 import { fechaCorta } from "./ui.jsx";
 
 // Etapa del CRM (una a la vez) + etiquetas libres de un número de WhatsApp. Se usa en el chat y en la ficha del cliente.
-export default function EtapasChat({ telefono, conHistorial = false, alCambiar }) {
+export default function EtapasChat({ telefono, conHistorial = false, alCambiar, soloResumen = false, onAbrir }) {
   const [etiquetas, setEtiquetas] = useState([]);
   const [mias, setMias] = useState([]);
   const [historial, setHistorial] = useState([]);
@@ -19,6 +19,17 @@ export default function EtapasChat({ telefono, conHistorial = false, alCambiar }
 
   if (!telefono) return null;
   const etapas = etiquetas.filter(e => e.es_etapa), libres = etiquetas.filter(e => !e.es_etapa);
+
+  // Versión compacta: solo la etapa y etiquetas puestas; al tocar, se abre el panel completo
+  if (soloResumen) {
+    const puestas = [...etapas, ...libres].filter(e => mias.includes(e.id));
+    return (
+      <button type="button" className="crm-resumen" onClick={onAbrir} aria-label="Cambiar etapa y opciones">
+        {puestas.length ? puestas.map(e => <Etiqueta key={e.id} etiqueta={e} chica />) : <span className="ayuda">Sin etapa</span>}
+        <span className="crm-abrir">Etapa y opciones ▾</span>
+      </button>
+    );
+  }
 
   async function alternar(e) {
     const tiene = mias.includes(e.id);
