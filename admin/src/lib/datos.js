@@ -317,3 +317,82 @@ export const linkSeguimiento = codigo => `${SITIO}/seguimiento.html#${codigo}`;
 export const mensajeSeguimiento = p =>
   `¡Hola${p.clientes?.nombre ? " " + p.clientes.nombre.split(" ")[0] : ""}! Aquí puedes ver en qué va tu pedido ${p.codigo} de RINBŌ Ichiba:\n${linkSeguimiento(p.codigo_seguimiento)}\n\nTu código de seguimiento es ${p.codigo_seguimiento} (guárdalo, es solo para ti).`;
 export const linkWhatsapp = (numero, mensaje) => `https://wa.me/${limpiarWhatsapp(numero) || ""}?text=${encodeURIComponent(mensaje)}`;
+
+// ============================================================
+// Fase 10: resumen por mes y exportación a Excel
+// ============================================================
+// Todo lo que necesitan el resumen de Inicio y el Excel, en una sola lectura
+export async function leerTodo() {
+  const [pedidos, items, pagos, clientes, productos] = await Promise.all([
+    db().from("pedidos_resumen").select("*").order("creado_en").then(ok),
+    db().from("pedido_items").select("*").order("id").then(ok),
+    db().from("pagos").select("*").order("fecha").then(ok),
+    db().from("clientes").select("*").order("nombre").then(ok),
+    db().from("productos").select("*").order("orden").then(ok),
+  ]);
+  return { pedidos, items, pagos, clientes, productos };
+}
+
+// Mes "AAAA-MM" en hora de Chile (así un pedido de las 23:00 no cae en el mes siguiente)
+export const mesDe = f => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Santiago", year: "numeric", month: "2-digit" }).format(new Date(f)).slice(0, 7);
+export const nombreMes = m => { const [a, n] = m.split("-"); return ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"][+n - 1] + " " + a.slice(2); };
+export const conCostos = p => p.costo_clp > 0 || p.impuestos_clp > 0;
+
+// Últimos `meses` meses (incluye el actual), aunque no tengan pedidos
+export function resumenMensual({ pedidos, pagos }, meses = 12) {
+  const hoy = new Date(), lista = [];
+  for (let i = meses - 1; i >= 0; i--) {
+    const d = new Date(Date.UTC(hoy.getUTCFullYear(), hoy.getUTCMonth() - i, 15));
+    lista.push({ mes: d.toISOString().slice(0, 7), pedidos: 0, ventas: 0, ganancia: 0, sinCosto: 0, cobrado: 0 });
+  }
+  const porMes = Object.fromEntries(lista.map(x => [x.mes, x]));
+  for (const p of pedidos) {
+    const m = porMes[mesDe(p.creado_en)];
+    if (!m) continue;
+    m.pedidos++; m.ventas += p.total_clp;
+    if (conCostos(p)) m.ganancia += p.utilidad_clp; else if (p.total_clp > 0) m.sinCosto++;
+  }
+  for (const g of pagos) { const m = porMes[g.fecha.slice(0, 7)]; if (m) m.cobrado += g.monto_clp; }
+  return lista;
+}
+
+export async function exportarExcel() {
+  const { default: writeXlsxFile } = await import("write-excel-file/browser");
+  const d = await leerTodo();
+  const codigo = Object.fromEntries(d.pedidos.map(p => [p.id, p.codigo]));
+  const titulo = t => ({ value: t, fontWeight: "bold", backgroundColor: "#F1EFEB" });
+  const pesos = v => ({ value: Number(v) || 0, type: Number, format: "$#,##0;-$#,##0" });
+  const fecha = v => v ? { value: new Date(v), type: Date, format: "dd-mm-yyyy" } : null;
+  const hoja = (nombre, cabecera, filas, anchos) => ({
+    sheet: nombre, stickyRowsCount: 1, columns: anchos.map(width => ({ width })),
+    data: [cabecera.map(titulo), ...filas],
+  });
+
+  const hojas = [
+    hoja("Pedidos",
+      ["Código", "Fecha", "Cliente", "WhatsApp", "Etapa", "Precio de venta", "Costo", "Impuestos", "Utilidad", "Abonado", "Saldo", "Código de seguimiento", "Información para el cliente", "Notas internas"],
+      d.pedidos.map(p => [p.codigo, fecha(p.creado_en), p.cliente_nombre, p.cliente_whatsapp, p.etapa, pesos(p.total_clp), pesos(p.costo_clp),
+        pesos(p.impuestos_clp), conCostos(p) ? pesos(p.utilidad_clp) : null, pesos(p.abonado_clp), pesos(p.saldo_clp), p.codigo_seguimiento,
+        p.comentarios_generales, p.notas_internas]),
+      [10, 12, 24, 16, 20, 14, 12, 12, 12, 12, 12, 16, 40, 40]),
+    hoja("Artículos", ["Pedido", "Producto", "Descripción", "Cantidad", "Precio unitario", "Subtotal"],
+      d.items.map(i => [codigo[i.pedido_id], i.producto_id, i.descripcion, i.cantidad, pesos(i.precio_unitario_clp), pesos(i.cantidad * i.precio_unitario_clp)]),
+      [10, 16, 40, 10, 14, 14]),
+    hoja("Pagos", ["Pedido", "Fecha", "Monto", "Medio", "Nota"],
+      d.pagos.map(g => [codigo[g.pedido_id], fecha(g.fecha), pesos(g.monto_clp), g.medio, g.nota]),
+      [10, 12, 14, 16, 40]),
+    hoja("Clientes", ["Nombre", "WhatsApp", "Instagram", "Correo", "Ciudad", "Pedidos", "Notas", "Creado"],
+      d.clientes.map(c => [c.nombre, c.whatsapp, c.instagram, c.email, c.ciudad, d.pedidos.filter(p => p.cliente_id === c.id).length, c.notas, fecha(c.creado_en)]),
+      [24, 16, 18, 24, 16, 9, 40, 12]),
+    hoja("Productos", ["Código", "Nombre", "Categoría", "Subcategoría", "Marca", "Estado", "Precio", "Oferta", "Stock", "Publicado", "Destacado"],
+      d.productos.map(p => [p.id, p.nombre, p.categoria_principal, p.categoria_secundaria, p.marca, p.estado, pesos(p.precio_clp),
+        p.precio_oferta ? pesos(p.precio_oferta) : null, p.stock, p.publicado ? "Sí" : "No", p.destacado ? "Sí" : "No"]),
+      [16, 40, 16, 16, 14, 12, 12, 12, 12, 10, 10]),
+    hoja("Resumen por mes", ["Mes", "Pedidos", "Ventas", "Ganancia (pedidos con costos)", "Pedidos sin costo", "Cobrado"],
+      resumenMensual(d, 24).map(m => [nombreMes(m.mes), m.pedidos, pesos(m.ventas), pesos(m.ganancia), m.sinCosto, pesos(m.cobrado)]),
+      [10, 9, 14, 24, 16, 14]),
+  ];
+  const nombre = `RINBO-respaldo-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  await writeXlsxFile(hojas, { fontFamily: "Calibri", fontSize: 11 }).toFile(nombre);
+  return nombre;
+}

@@ -106,3 +106,7 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
   (Archivo → Compartir → Publicar en la web → pestaña SegPublica → Dejar de publicar). Volver atrás: publicarla de nuevo y restaurar la URL.
 - Volver atrás de la fase 6 en la web: Revert del PR (la base y la Edge Function pueden quedar; no afectan a la web vieja).
 - [x] Control de utilidad por pedido (migración 6, 4 pruebas OK): precio de venta, costo del producto, impuestos pagados y utilidad (solo el dueño la ve).
+
+### Fase 10 (2026-09-25) — resumen y Excel, rama `claude/fase10-excel`
+- [x] Inicio de la Admin: cifras del mes, gráficos de pedidos y ganancia por mes, tabla por mes.
+- [x] "Descargar Excel": Pedidos, Artículos, Pagos, Clientes, Productos, Resumen por mes (24 meses). Probado con 30 pedidos de prueba en la base real (borrados).
