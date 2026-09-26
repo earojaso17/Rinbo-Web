@@ -117,3 +117,7 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 ### Fase 10 (2026-09-25) — resumen y Excel, rama `claude/fase10-excel`
 - [x] Inicio de la Admin: cifras del mes, gráficos de pedidos y ganancia por mes, tabla por mes.
 - [x] "Descargar Excel": Pedidos, Artículos, Pagos, Clientes, Productos, Resumen por mes (24 meses). Probado con 30 pedidos de prueba en la base real (borrados).
+- Historial: Meta lo envía **una sola vez** al conectar (hasta 180 días). La primera conexión se hizo con el webhook inactivo y se perdió.
+  Preparado para reconectar: migración 8 (`whatsapp_eventos`, respaldo de cada aviso) + buzón que entiende `whatsapp.smb.history` (probado con una copia temporal: fechas originales, recibidos/enviados, listas, reintentos).
+- [ ] Dueño: reconectar (webhook activo ANTES) eligiendo compartir historial.
+- Las etiquetas/listas de WhatsApp Business no se sincronizan (Meta no las expone).

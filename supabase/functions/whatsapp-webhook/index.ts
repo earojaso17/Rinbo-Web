@@ -1,5 +1,6 @@
 // Edge Function "whatsapp-webhook" (fase 8): recibe de YCloud los mensajes del WhatsApp de la tienda
-// (coexistencia con la app WhatsApp Business) y los guarda en rinbo.whatsapp_mensajes. Solo lectura: nunca envía nada.
+// (coexistencia con la app WhatsApp Business): guarda cada aviso completo en rinbo.whatsapp_eventos (respaldo) y sus
+// mensajes en rinbo.whatsapp_mensajes. Solo lectura: nunca envía nada.
 //   URL para YCloud: https://mgxljvxjonopchpvmjkl.supabase.co/functions/v1/whatsapp-webhook
 // Seguridad: cada aviso trae la cabecera "YCloud-Signature: t=<segundos>,s=<hex>" = HMAC-SHA256("<t>.<cuerpo>", secreto).
 // El secreto lo pone el dueño en Supabase → Edge Functions → Secrets como YCLOUD_WEBHOOK_SECRET (nunca va al repo ni al chat).
@@ -34,15 +35,16 @@ async function firmaValida(cabecera: string, cuerpo: string) {
   return dif === 0;
 }
 
-// El mensaje viene en una propiedad distinta según el aviso (whatsappInboundMessage, whatsappMessage…):
-// se toma el primer objeto que tenga "wamid".
+// El mensaje puede venir en distintas propiedades (whatsappInboundMessage, whatsappMessage…) y, en el historial
+// que Meta envía al conectar (whatsapp.smb.history), a veces dentro de listas: se buscan en todo el aviso
+// los objetos que tengan "wamid". Se recuerda el nombre de la propiedad para saber si es enviado o recibido.
 type Msg = Record<string, any>;
-function mensajesDe(evento: Msg): Msg[] {
-  const res: Msg[] = [];
-  for (const v of Object.values(evento)) {
-    if (Array.isArray(v)) v.forEach(x => x && typeof x === "object" && x.wamid && res.push(x));
-    else if (v && typeof v === "object" && (v as Msg).wamid) res.push(v as Msg);
-  }
+function mensajesDe(nodo: unknown, clave = "", res: { m: Msg; clave: string }[] = [], prof = 0) {
+  if (!nodo || typeof nodo !== "object" || prof > 8) return res;
+  if (Array.isArray(nodo)) { nodo.forEach(x => mensajesDe(x, clave, res, prof + 1)); return res; }
+  const obj = nodo as Msg;
+  if (typeof obj.wamid === "string" && obj.wamid) { res.push({ m: obj, clave }); return res; }
+  for (const [k, v] of Object.entries(obj)) if (v && typeof v === "object") mensajesDe(v, k, res, prof + 1);
   return res;
 }
 
@@ -58,12 +60,15 @@ function textoDe(m: Msg): string | null {
   return c.caption || c.filename || c.body || null;
 }
 
-function aFila(m: Msg, tipoEvento: string) {
+function aFila(m: Msg, tipoEvento: string, clave: string) {
   const de = digitos(m.from), para = digitos(m.to);
-  const saliente = tipoEvento.includes("echo") || tipoEvento.includes("sent") || (de === TIENDA && para !== TIENDA);
+  const saliente = tipoEvento.includes("echo") || tipoEvento.includes("sent") || (de === TIENDA && para !== TIENDA)
+    || (!de && !!para && para !== TIENDA)          // sin remitente y el destinatario es el cliente
+    || (/outbound|^whatsappMessage$/i.test(clave) && para !== TIENDA);
   const telefono = saliente ? para : de;
   if (!telefono || telefono === TIENDA) return null;
-  const cuando = m.sendTime || m.createTime || m.timestamp;
+  // Fecha original del mensaje (en el historial, createTime puede ser la fecha de la sincronización)
+  const cuando = m.sendTime || m.timestamp || m.deliverTime || m.createTime;
   const fecha = cuando ? new Date(/^\d+$/.test(String(cuando)) ? Number(cuando) * 1000 : cuando) : new Date();
   return {
     wamid: String(m.wamid),
@@ -89,17 +94,30 @@ Deno.serve(async (req) => {
   let evento: Msg;
   try { evento = JSON.parse(cuerpo); } catch { return responder({ error: "json" }, 400); }
   const tipoEvento = String(evento.type || "");
-  const filas = mensajesDe(evento).map(m => aFila(m, tipoEvento)).filter(Boolean);
-  if (!filas.length) return responder({ ok: true, guardados: 0, evento: tipoEvento });
 
-  const r = await fetch(`${URL_BASE}/rest/v1/whatsapp_mensajes?on_conflict=wamid`, {
-    method: "POST",
-    headers: {
-      apikey: LLAVE, ...(LLAVE.startsWith("sb_") ? {} : { Authorization: `Bearer ${LLAVE}` }),
-      "Content-Type": "application/json", "Content-Profile": "rinbo", Prefer: "resolution=ignore-duplicates,return=minimal",
-    },
-    body: JSON.stringify(filas),
+  // 1) Respaldo del aviso completo, antes de todo (si falla, YCloud reintenta)
+  const cabeceras = {
+    apikey: LLAVE, ...(LLAVE.startsWith("sb_") ? {} : { Authorization: `Bearer ${LLAVE}` }),
+    "Content-Type": "application/json", "Content-Profile": "rinbo", Prefer: "resolution=ignore-duplicates,return=minimal",
+  };
+  const r0 = await fetch(`${URL_BASE}/rest/v1/whatsapp_eventos?on_conflict=evento_id`, {
+    method: "POST", headers: cabeceras,
+    body: JSON.stringify({ evento_id: evento.id ? String(evento.id) : null, tipo: tipoEvento || "desconocido", crudo: evento }),
   });
-  if (!r.ok) { console.error("guardar", r.status, await r.text()); return responder({ error: "guardar" }, 500); }
-  return responder({ ok: true, guardados: filas.length });
+  if (!r0.ok) { console.error("respaldo", r0.status, await r0.text()); return responder({ error: "respaldo" }, 500); }
+
+  // 2) Mensajes (de a 500 por envío; los repetidos se ignoran por wamid)
+  const filas = mensajesDe(evento).map(x => aFila(x.m, tipoEvento, x.clave)).filter(Boolean);
+  for (let i = 0; i < filas.length; i += 500) {
+    const r = await fetch(`${URL_BASE}/rest/v1/whatsapp_mensajes?on_conflict=wamid`, {
+      method: "POST", headers: cabeceras, body: JSON.stringify(filas.slice(i, i + 500)),
+    });
+    if (!r.ok) { console.error("guardar", r.status, await r.text()); return responder({ error: "guardar" }, 500); }
+  }
+  if (filas.length && evento.id) {
+    await fetch(`${URL_BASE}/rest/v1/whatsapp_eventos?evento_id=eq.${encodeURIComponent(String(evento.id))}`, {
+      method: "PATCH", headers: { ...cabeceras, Prefer: "return=minimal" }, body: JSON.stringify({ mensajes: filas.length }),
+    });
+  }
+  return responder({ ok: true, guardados: filas.length, evento: tipoEvento });
 });
