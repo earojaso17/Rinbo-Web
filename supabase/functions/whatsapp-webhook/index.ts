@@ -79,7 +79,6 @@ function aFila(m: Msg, tipoEvento: string, clave: string) {
     texto: textoDe(m),
     enviado_en: isNaN(fecha.getTime()) ? new Date().toISOString() : fecha.toISOString(),
     evento: tipoEvento,
-    crudo: m,
   };
 }
 
@@ -98,17 +97,25 @@ Deno.serve(async (req) => {
   // Respaldo del aviso + sus mensajes en UNA sola llamada (rinbo.guardar_aviso_whatsapp). Si la base no responde a
   // tiempo se contesta 503 y YCloud reintenta más tarde (así una avalancha, como el historial, no la satura).
   const filas = mensajesDe(evento).map(x => aFila(x.m, tipoEvento, x.clave)).filter(Boolean);
-  let r: Response;
-  try {
-    r = await fetch(`${URL_BASE}/rest/v1/rpc/guardar_aviso_whatsapp`, {
-      method: "POST", signal: AbortSignal.timeout(10000),
-      headers: {
-        apikey: LLAVE, ...(LLAVE.startsWith("sb_") ? {} : { Authorization: `Bearer ${LLAVE}` }),
-        "Content-Type": "application/json", "Content-Profile": "rinbo",
-      },
-      body: JSON.stringify({ p_evento_id: evento.id ? String(evento.id) : null, p_tipo: tipoEvento, p_crudo: evento, p_mensajes: filas }),
-    });
-  } catch (e) { console.error("sin respuesta de la base", String(e)); return responder({ error: "ocupado" }, 503); }
-  if (!r.ok) { console.error("guardar", r.status, await r.text()); return responder({ error: "guardar" }, 503); }
-  return responder({ ok: true, guardados: await r.json(), evento: tipoEvento });
+  // Hasta 4 intentos dentro de la misma llamada (esperas de 0,5 s, 1,5 s y 3 s) antes de pedirle a YCloud que reintente
+  const cuerpoRpc = JSON.stringify({ p_evento_id: evento.id ? String(evento.id) : null, p_tipo: tipoEvento, p_crudo: evento, p_mensajes: filas });
+  let guardados: unknown = null, ultimoError = "";
+  for (const espera of [0, 500, 1500, 3000]) {
+    if (espera) await new Promise(res => setTimeout(res, espera));
+    try {
+      const r = await fetch(`${URL_BASE}/rest/v1/rpc/guardar_aviso_whatsapp`, {
+        method: "POST", signal: AbortSignal.timeout(8000),
+        headers: {
+          apikey: LLAVE, ...(LLAVE.startsWith("sb_") ? {} : { Authorization: `Bearer ${LLAVE}` }),
+          "Content-Type": "application/json", "Content-Profile": "rinbo",
+        },
+        body: cuerpoRpc,
+      });
+      if (r.ok) { guardados = await r.json(); ultimoError = ""; break; }
+      ultimoError = `HTTP ${r.status} ${(await r.text()).slice(0, 200)}`;
+      if (r.status < 500 && r.status !== 429) break;   // error de datos: reintentar no sirve
+    } catch (e) { ultimoError = String(e); }
+  }
+  if (ultimoError) { console.error("guardar", ultimoError); return responder({ error: "ocupado" }, 503); }
+  return responder({ ok: true, guardados, evento: tipoEvento });
 });
