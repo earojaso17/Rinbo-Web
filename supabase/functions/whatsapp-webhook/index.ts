@@ -95,29 +95,20 @@ Deno.serve(async (req) => {
   try { evento = JSON.parse(cuerpo); } catch { return responder({ error: "json" }, 400); }
   const tipoEvento = String(evento.type || "");
 
-  // 1) Respaldo del aviso completo, antes de todo (si falla, YCloud reintenta)
-  const cabeceras = {
-    apikey: LLAVE, ...(LLAVE.startsWith("sb_") ? {} : { Authorization: `Bearer ${LLAVE}` }),
-    "Content-Type": "application/json", "Content-Profile": "rinbo", Prefer: "resolution=ignore-duplicates,return=minimal",
-  };
-  const r0 = await fetch(`${URL_BASE}/rest/v1/whatsapp_eventos?on_conflict=evento_id`, {
-    method: "POST", headers: cabeceras,
-    body: JSON.stringify({ evento_id: evento.id ? String(evento.id) : null, tipo: tipoEvento || "desconocido", crudo: evento }),
-  });
-  if (!r0.ok) { console.error("respaldo", r0.status, await r0.text()); return responder({ error: "respaldo" }, 500); }
-
-  // 2) Mensajes (de a 500 por envío; los repetidos se ignoran por wamid)
+  // Respaldo del aviso + sus mensajes en UNA sola llamada (rinbo.guardar_aviso_whatsapp). Si la base no responde a
+  // tiempo se contesta 503 y YCloud reintenta más tarde (así una avalancha, como el historial, no la satura).
   const filas = mensajesDe(evento).map(x => aFila(x.m, tipoEvento, x.clave)).filter(Boolean);
-  for (let i = 0; i < filas.length; i += 500) {
-    const r = await fetch(`${URL_BASE}/rest/v1/whatsapp_mensajes?on_conflict=wamid`, {
-      method: "POST", headers: cabeceras, body: JSON.stringify(filas.slice(i, i + 500)),
+  let r: Response;
+  try {
+    r = await fetch(`${URL_BASE}/rest/v1/rpc/guardar_aviso_whatsapp`, {
+      method: "POST", signal: AbortSignal.timeout(10000),
+      headers: {
+        apikey: LLAVE, ...(LLAVE.startsWith("sb_") ? {} : { Authorization: `Bearer ${LLAVE}` }),
+        "Content-Type": "application/json", "Content-Profile": "rinbo",
+      },
+      body: JSON.stringify({ p_evento_id: evento.id ? String(evento.id) : null, p_tipo: tipoEvento, p_crudo: evento, p_mensajes: filas }),
     });
-    if (!r.ok) { console.error("guardar", r.status, await r.text()); return responder({ error: "guardar" }, 500); }
-  }
-  if (filas.length && evento.id) {
-    await fetch(`${URL_BASE}/rest/v1/whatsapp_eventos?evento_id=eq.${encodeURIComponent(String(evento.id))}`, {
-      method: "PATCH", headers: { ...cabeceras, Prefer: "return=minimal" }, body: JSON.stringify({ mensajes: filas.length }),
-    });
-  }
-  return responder({ ok: true, guardados: filas.length, evento: tipoEvento });
+  } catch (e) { console.error("sin respuesta de la base", String(e)); return responder({ error: "ocupado" }, 503); }
+  if (!r.ok) { console.error("guardar", r.status, await r.text()); return responder({ error: "guardar" }, 503); }
+  return responder({ ok: true, guardados: await r.json(), evento: tipoEvento });
 });

@@ -49,3 +49,10 @@ No se publica en ningún sitio web.
 | 20260925000006 | control de utilidad: `pedidos.costo_clp`, `impuestos_clp`; `pedidos_resumen.utilidad_clp` (privado) | `pruebas/05_control_utilidad.sql` (4 OK) |
 | 20260925000007 | bandeja WhatsApp: `whatsapp_mensajes` (admins solo leen/borran; escribe el servidor) + vista `whatsapp_conversaciones` | `pruebas/06_whatsapp_mensajes.sql` (6 OK) |
 | 20260926000008 | `whatsapp_eventos`: respaldo de cada aviso de YCloud antes de procesarlo (historial `whatsapp.smb.history`, contactos…) | `pruebas/07_whatsapp_eventos.sql` (3 OK) |
+| 20260926000009 | `guardar_aviso_whatsapp()`: respaldo + mensajes en una sola llamada (solo servidor) | `pruebas/08_guardar_aviso_whatsapp.sql` (3 OK) |
+
+## Incidente 2026-09-26: historial de WhatsApp
+Al reconectar WhatsApp, Meta mandó ~1.650 avisos por minuto; el buzón hacía 3 llamadas por aviso y la API (PostgREST) se colgó
+(Admin y seguimiento caídos ~10 min; la web pública siguió bien). Se reinició el proyecto (Management API `POST /v1/projects/<ref>/restart`),
+el buzón pasó a una sola llamada (`guardar_aviso_whatsapp`, 503 si la base no responde en 10 s → YCloud reintenta) y los avisos
+respaldados sin convertir se procesaron con `mantenimiento/reprocesar_whatsapp_eventos.sql`.
