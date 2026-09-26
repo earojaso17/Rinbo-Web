@@ -100,7 +100,7 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 - Botón "Publicar cambios ahora" (Inicio y tras guardar): `admin/functions/api/publicar.js` (Cloudflare Pages Function) → `workflow_dispatch` de `pages.yml`; el token de GitHub es el secreto `GITHUB_TOKEN` de Cloudflare, nunca va al navegador.
 - Pedidos y Clientes (fase 5): control privado de utilidad (venta − costo − impuestos; nunca sale en el seguimiento), etapas, pagos, fotos de evidencia (bucket privado), link de seguimiento por WhatsApp.
 - Mensajes (fase 8): copia de solo lectura del WhatsApp de la tienda (YCloud → Edge Function `whatsapp-webhook` → `rinbo.whatsapp_mensajes`); el cliente se reconoce por su número. CRM: etapas (una por número, con historial) y etiquetas libres (`rinbo.etiquetas`, `chat_etiquetas`, `chat_etapas_historial`).
-- Inicio (fase 10): resumen por mes (pedidos, ventas, ganancia, por cobrar) y "Descargar Excel" con todo (respaldo).
+- Inicio (fase 10): resumen con filtro de período (mes, trimestre, año, personalizado, todo: pedidos, ventas, ganancia, cobrado, por cobrar) y "Descargar Excel" con todo (respaldo).
 - Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
 
 ## Convenciones
