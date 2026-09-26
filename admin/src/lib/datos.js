@@ -319,6 +319,21 @@ export const mensajeSeguimiento = p =>
 export const linkWhatsapp = (numero, mensaje) => `https://wa.me/${limpiarWhatsapp(numero) || ""}?text=${encodeURIComponent(mensaje)}`;
 
 // ============================================================
+// Fase 8: bandeja de WhatsApp (solo lectura; los mensajes los guarda la Edge Function whatsapp-webhook)
+// ============================================================
+export const listarConversaciones = () => db().from("whatsapp_conversaciones").select("*").order("ultimo_en", { ascending: false }).then(ok);
+export const listarMensajes = telefono => db().from("whatsapp_mensajes")
+  .select("id, wamid, direccion, tipo, texto, nombre_perfil, enviado_en").eq("telefono", telefono)
+  .order("enviado_en").order("id").limit(1000).then(ok);
+export const borrarConversacion = telefono => db().from("whatsapp_mensajes").delete().eq("telefono", telefono).then(ok);
+// Chats vistos: se recuerda en este navegador la fecha del último mensaje leído de cada chat
+const CLAVE_VISTOS = "rinbo_admin_chats_vistos";
+export const vistos = () => { try { return JSON.parse(localStorage.getItem(CLAVE_VISTOS) || "{}"); } catch { return {}; } };
+export const marcarVisto = (telefono, fecha) => {
+  try { const v = vistos(); v[telefono] = fecha; localStorage.setItem(CLAVE_VISTOS, JSON.stringify(v)); } catch { /* sin almacenamiento */ }
+};
+
+// ============================================================
 // Fase 10: resumen por mes y exportación a Excel
 // ============================================================
 // Todo lo que necesitan el resumen de Inicio y el Excel, en una sola lectura

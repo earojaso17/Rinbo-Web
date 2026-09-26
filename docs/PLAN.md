@@ -107,6 +107,12 @@ Rama `claude/seo-sem` (encima del rediseño; un solo PR a `main` con ambas cosas
 - Volver atrás de la fase 6 en la web: Revert del PR (la base y la Edge Function pueden quedar; no afectan a la web vieja).
 - [x] Control de utilidad por pedido (migración 6, 4 pruebas OK): precio de venta, costo del producto, impuestos pagados y utilidad (solo el dueño la ve).
 
+### Fase 8 (2026-09-25) — bandeja WhatsApp, rama `claude/fase8-whatsapp`
+- Decisión: coexistencia vía **YCloud** (proveedor oficial con plan gratis; Meta no permite conectarla por cuenta propia sin ser proveedor). La app WhatsApp Business del celular sigue igual; solo lectura (nunca se envía desde la Admin).
+- [x] Migración 7 aplicada (6 pruebas OK). Edge Function `whatsapp-webhook` publicada y probada con avisos firmados (entrante, enviado desde la app, foto, repetido, evento ajeno).
+- [x] Admin: Mensajes + Chat + "Crear cliente" desde el chat + "Ver mensajes" en la ficha del cliente. Probado contra la base real (datos de prueba borrados).
+- [ ] Dueño: cuenta YCloud → conectar el número (coexistencia; confirmar que +81 lo permite) → webhook a `…/functions/v1/whatsapp-webhook` → secreto `YCLOUD_WEBHOOK_SECRET` en Supabase.
+- Volver atrás: en la app WhatsApp Business desconectar la plataforma (YCloud); en la Admin, Revert del PR.
 ### Fase 10 (2026-09-25) — resumen y Excel, rama `claude/fase10-excel`
 - [x] Inicio de la Admin: cifras del mes, gráficos de pedidos y ganancia por mes, tabla por mes.
 - [x] "Descargar Excel": Pedidos, Artículos, Pagos, Clientes, Productos, Resumen por mes (24 meses). Probado con 30 pedidos de prueba en la base real (borrados).

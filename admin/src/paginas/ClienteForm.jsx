@@ -25,9 +25,9 @@ export function CamposCliente({ form, setForm }) {
   );
 }
 
-export default function ClienteForm({ id }) {
+export default function ClienteForm({ id, inicial = {} }) {
   const nuevo = !id;
-  const [form, setForm] = useState(nuevo ? CLIENTE_VACIO : null);
+  const [form, setForm] = useState(nuevo ? { ...CLIENTE_VACIO, whatsapp: inicial.whatsapp || "", nombre: inicial.nombre || "" } : null);
   const [pedidos, setPedidos] = useState([]);
   const [error, setError] = useState("");
   const [aviso, setAviso] = useState("");
@@ -65,7 +65,10 @@ export default function ClienteForm({ id }) {
       <h1 className="titulo">{nuevo ? "Nuevo cliente" : form.nombre}</h1>
       <form onSubmit={guardar} className="tarjeta">
         <CamposCliente form={form} setForm={setForm} />
-        {!nuevo && form.whatsapp && <a className="btn chico" href={linkWhatsapp(form.whatsapp, "")} target="_blank" rel="noopener">Abrir WhatsApp</a>}
+        {!nuevo && form.whatsapp && <div className="botones">
+          <a className="btn chico" href={`#/mensajes/${form.whatsapp.replace(/\D/g, "")}`}>Ver mensajes</a>
+          <a className="btn chico" href={linkWhatsapp(form.whatsapp, "")} target="_blank" rel="noopener">Abrir WhatsApp</a>
+        </div>}
         {error && <p className="aviso error" role="alert">{error}</p>}
         {aviso && <p className="aviso ok">{aviso}</p>}
         <div className="acciones">

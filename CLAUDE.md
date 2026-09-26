@@ -90,7 +90,7 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 ## Supabase (fase 2) — ver `supabase/README.md`
 
 - Proyecto `rinbo` (ref `mgxljvxjonopchpvmjkl`, São Paulo). SQL por Management API (`POST /v1/projects/<ref>/database/query`, token del entorno); la conexión directa a Postgres está bloqueada.
-- Esquema `rinbo`: expuesto en la Data API solo para la Admin, pero `anon` no tiene USAGE (visitantes reciben "permission denied") y RLS es solo-admins; la web solo puede usar `public.catalogo()` y `public.producto()`, más la Edge Function `seguimiento` (`supabase/functions/`).
+- Esquema `rinbo`: expuesto en la Data API solo para la Admin, pero `anon` no tiene USAGE (visitantes reciben "permission denied") y RLS es solo-admins; la web solo puede usar `public.catalogo()` y `public.producto()`, más la Edge Function `seguimiento` (`supabase/functions/`). `whatsapp-webhook` solo acepta avisos firmados por YCloud.
 - Toda migración: archivo en `supabase/migrations/`, ensayo con pruebas en una transacción que se deshace, y recién ahí aplicar.
 
 ## admin/ (fases 3 y 5) — ver `admin/README.md`
@@ -99,6 +99,7 @@ Los cambios en la planilla se reflejan en el sitio sin tocar el repo (Google cac
 - Inicio de la Admin: botón "Traer productos que faltan" (importa desde la planilla antigua, en el navegador del dueño, solo los códigos que no existen; opción avanzada para reemplazar). Cada producto publicado tiene link "Ver en rinbo.store".
 - Botón "Publicar cambios ahora" (Inicio y tras guardar): `admin/functions/api/publicar.js` (Cloudflare Pages Function) → `workflow_dispatch` de `pages.yml`; el token de GitHub es el secreto `GITHUB_TOKEN` de Cloudflare, nunca va al navegador.
 - Pedidos y Clientes (fase 5): control privado de utilidad (venta − costo − impuestos; nunca sale en el seguimiento), etapas, pagos, fotos de evidencia (bucket privado), link de seguimiento por WhatsApp.
+- Mensajes (fase 8): copia de solo lectura del WhatsApp de la tienda (YCloud → Edge Function `whatsapp-webhook` → `rinbo.whatsapp_mensajes`); el cliente se reconoce por su número.
 - Inicio (fase 10): resumen por mes (pedidos, ventas, ganancia, por cobrar) y "Descargar Excel" con todo (respaldo).
 - Build: `cd admin && npm run build` → `admin/dist` (Cloudflare Pages "rinbo-admin", protegido con Cloudflare Access).
 
