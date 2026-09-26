@@ -288,3 +288,12 @@ button.etiqueta-chat:not(.activa) { opacity: .65; }
 .crm-historial .num { color: var(--muted); margin-right: 6px; }
 .grupo-etiquetas { display: grid; gap: 8px; }
 .tarjeta .crm-fila .chips { flex-wrap: wrap; }
+
+/* Etiquetas y etapas: siempre todas a la vista (en varias líneas, sin deslizar) */
+.crm-fila .chips, .chat-cabecera .etiquetas-chat, [aria-label="Filtrar por etapa"], [aria-label="Filtrar por etiqueta"] {
+  flex-wrap: wrap; overflow: visible; gap: 6px; }
+.crm-fila { align-items: start; }
+.crm-rotulo { padding-top: 6px; }
+.crm .etiqueta-chat, [aria-label="Filtrar por etapa"] .etiqueta-chat, [aria-label="Filtrar por etiqueta"] .etiqueta-chat {
+  padding: 4px 10px; font-size: .78rem; }
+.chat-cabecera .botones { flex-wrap: wrap; overflow: visible; }
