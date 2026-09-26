@@ -57,21 +57,6 @@ export default function Inicio({ correo }) {
             <a href="#/clientes"><b className="num">{uso.tablas.clientes}</b><span>Clientes</span></a>
             <a href="#/pedidos"><b className="num">{uso.tablas.pedidos}</b><span>Pedidos</span></a>
           </section>
-          <section className="tarjeta">
-            <h2 className="subtitulo">Espacio del plan gratis</h2>
-            <Barra titulo="Base de datos" usado={uso.base_datos.bytes} limite={uso.base_datos.limite} porcentaje={uso.base_datos.porcentaje} />
-            <Barra titulo="Fotos y archivos" usado={uso.archivos.bytes} limite={uso.archivos.limite} porcentaje={uso.archivos.porcentaje} />
-            <ul className="carpetas">
-              {uso.carpetas.map(c => <li key={c.carpeta}><span>{c.carpeta === "productos" ? "Fotos de productos" : "Evidencias de pedidos"}</span><span className="num">{c.archivos} archivos · {mb(c.bytes)}</span></li>)}
-            </ul>
-            {uso.huerfanos.archivos > 0 && (
-              <div className="aviso">
-                Hay {uso.huerfanos.archivos} foto(s) que ya nadie usa ({mb(uso.huerfanos.bytes)}).
-                <button className="btn chico" onClick={limpiar} disabled={limpiando}>{limpiando ? "Borrando…" : "Borrar"}</button>
-              </div>
-            )}
-            {aviso && <p className="aviso ok">{aviso}</p>}
-          </section>
           <div className="dos">
             <a className="btn principal" href="#/pedidos/nuevo">+ Nuevo pedido</a>
             <a className="btn" href="#/productos/nuevo">+ Nuevo producto</a>
@@ -97,6 +82,21 @@ export default function Inicio({ correo }) {
                 {resultado.errores.length > 0 && <><br />Con problemas: {resultado.errores.join(" · ")}</>}
               </p>
             )}
+          </section>
+          <section className="tarjeta">
+            <h2 className="subtitulo">Espacio del plan gratis</h2>
+            <Barra titulo="Base de datos" usado={uso.base_datos.bytes} limite={uso.base_datos.limite} porcentaje={uso.base_datos.porcentaje} />
+            <Barra titulo="Fotos y archivos" usado={uso.archivos.bytes} limite={uso.archivos.limite} porcentaje={uso.archivos.porcentaje} />
+            <ul className="carpetas">
+              {uso.carpetas.map(c => <li key={c.carpeta}><span>{c.carpeta === "productos" ? "Fotos de productos" : "Evidencias de pedidos"}</span><span className="num">{c.archivos} archivos · {mb(c.bytes)}</span></li>)}
+            </ul>
+            {uso.huerfanos.archivos > 0 && (
+              <div className="aviso">
+                Hay {uso.huerfanos.archivos} foto(s) que ya nadie usa ({mb(uso.huerfanos.bytes)}).
+                <button className="btn chico" onClick={limpiar} disabled={limpiando}>{limpiando ? "Borrando…" : "Borrar"}</button>
+              </div>
+            )}
+            {aviso && <p className="aviso ok">{aviso}</p>}
           </section>
         </>
       )}
