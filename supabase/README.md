@@ -34,7 +34,9 @@ No se publica en ningún sitio web.
   (`wamid` único). Entrante/saliente según el número de la tienda (`TIENDA_WHATSAPP`, por defecto 819039343820).
   Cada aviso firmado se guarda completo en `whatsapp_eventos` (respaldo, reprocesable) y luego se buscan en todo el aviso
   los objetos con `wamid` (también listas del historial); la fecha es la original (`sendTime`/`timestamp` antes que `createTime`).
-  Fotos/audios no se descargan (solo el tipo y el texto o pie de foto). Publicar: igual que `seguimiento`, con `slug=whatsapp-webhook`.
+  Fotos y stickers: el webhook guarda el link firmado de YCloud (vence en ~7 días) y llama a la Edge Function `whatsapp-fotos`,
+  que baja la foto tal cual (WhatsApp ya la comprime, 40–150 KB) a la carpeta privada `whatsapp` (`media_ruta`, `media_estado`:
+  guardada / vencida / error). Cada llamada guarda también las pendientes. Audios y videos no se descargan. Publicar: igual que `seguimiento`, con `slug=whatsapp-webhook`.
 - Códigos de pedido: `R00001…` automáticos; al importar `R00127` el contador salta solo (trigger `ajustar_contador_pedidos`).
 - Auth: registros abiertos desactivados (`disable_signup = true`). Los usuarios se crean solo desde el panel de Supabase.
 
@@ -53,6 +55,7 @@ No se publica en ningún sitio web.
 | 20260926000010 | etiquetas de chats (`etiquetas`, `chat_etiquetas`; solo admins; 7 de partida) | `pruebas/09_etiquetas_chats.sql` (4 OK) |
 | 20260926000011 | CRM: `etiquetas.es_etapa` (una etapa por chat, trigger `etapa_unica`), `chat_etapas_historial` (trigger `registrar_etapa`); 5 etapas de partida | `pruebas/10_crm_etapas.sql` (5 OK) |
 | 20260926000012 | `chat_estado`: oculto (automático/a mano), leído hasta, no leído a mano — en la base, igual en todos los dispositivos | `pruebas/11_chat_estado.sql` (3 OK) |
+| 20260930000013 | `fotos_whatsapp`: `media_links/media_ruta/media_estado/media_intentos` en `whatsapp_mensajes`, carpeta privada `whatsapp`, `guardar_aviso_whatsapp` suma links, `archivos_huerfanos` incluye fotos de chats borrados; rellena los links de las fotos ya recibidas | `pruebas/12_fotos_whatsapp.sql` (7 OK) |
 
 ## Incidente 2026-09-26: historial de WhatsApp
 Al reconectar WhatsApp, Meta mandó ~1.650 avisos por minuto; el buzón hacía 3 llamadas por aviso y la API (PostgREST) se colgó

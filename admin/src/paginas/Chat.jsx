@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { listarMensajes, listarConversaciones, borrarConversacion, estadosChats, marcarLeido, marcarNoLeido, ocultarChat, estaOculto, linkWhatsapp, mensajeError } from "../lib/datos.js";
+import { listarMensajes, urlsFotosChat, listarConversaciones, borrarConversacion, estadosChats, marcarLeido, marcarNoLeido, ocultarChat, estaOculto, linkWhatsapp, mensajeError } from "../lib/datos.js";
 import EtapasChat from "../lib/EtapasChat.jsx";
 import { ir, Cargando, fechaCorta } from "../lib/ui.jsx";
 import { resumenTipo } from "./Mensajes.jsx";
@@ -15,6 +15,17 @@ export default function Chat({ telefono }) {
   useEffect(() => { estadosChats().then(st => setEstado(st[telefono] || {})).catch(() => setEstado({})); }, [telefono]);
   const avisar = t => { setAviso(t); setTimeout(() => setAviso(a => a === t ? "" : a), 2500); };
   const abajo = useRef(true);
+  // Fotos guardadas: se piden links temporales (1 hora) y se renuevan a los 50 minutos
+  const [fotos, setFotos] = useState({});
+  const fotosPedidas = useRef({ en: 0, rutas: new Set() });
+  useEffect(() => {
+    const rutas = (mensajes || []).map(m => m.media_ruta).filter(Boolean);
+    const viejas = Date.now() - fotosPedidas.current.en > 50 * 60 * 1000;
+    const faltan = viejas ? rutas : rutas.filter(r => !fotosPedidas.current.rutas.has(r));
+    if (!faltan.length) return;
+    fotosPedidas.current = { en: viejas ? Date.now() : fotosPedidas.current.en, rutas: new Set([...(viejas ? [] : fotosPedidas.current.rutas), ...faltan]) };
+    urlsFotosChat(faltan).then(u => setFotos(f => ({ ...(viejas ? {} : f), ...u }))).catch(() => {});
+  }, [mensajes]);
 
   useEffect(() => {
     const cargar = () => Promise.all([listarMensajes(telefono), listarConversaciones()])
@@ -87,7 +98,7 @@ export default function Chat({ telefono }) {
       </header>
       <div className="chat-scroll">
         <div className="chat-inicio">
-          <p className="ayuda">Inicio de la copia de este chat. Las fotos, audios y videos no se copian aquí: se ven en tu app de WhatsApp.</p>
+          <p className="ayuda">Inicio de la copia de este chat. Las fotos se guardan desde el 30-09-2026; audios y videos se ven solo en tu app de WhatsApp.</p>
           <button className="enlace" onClick={async () => {
             if (!confirm("¿Borrar de la Admin la copia de este chat? (En tu WhatsApp no se borra nada.)")) return;
             try { await borrarConversacion(telefono); ir("/mensajes"); } catch (e) { setError(mensajeError(e)); }
@@ -101,7 +112,9 @@ export default function Chat({ telefono }) {
               <li key={m.id} className={m.tipo === "unsupported" ? "sistema" : m.direccion}>
                 {sep && <span className="dia num">{dia}</span>}
                 <div className="burbuja">
-                  {m.tipo !== "text" && <small className="tipo">{resumenTipo(m.tipo, "")}</small>}
+                  {m.media_ruta && fotos[m.media_ruta]
+                    ? <a className="foto-chat" href={fotos[m.media_ruta]} target="_blank" rel="noopener"><img src={fotos[m.media_ruta]} alt={m.texto || "Foto"} loading="lazy" onLoad={() => { if (abajo.current) window.scrollTo(0, document.documentElement.scrollHeight); }} /></a>
+                    : m.tipo !== "text" && <small className="tipo">{resumenTipo(m.tipo, "")}{m.media_estado === "vencida" ? " (llegó antes de que la Admin guardara fotos: mírala en tu WhatsApp)" : m.media_ruta ? " (cargando…)" : ""}</small>}
                   {m.texto && <p>{m.texto}</p>}
                   <time className="num">{new Date(m.enviado_en).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" })}</time>
                 </div>
