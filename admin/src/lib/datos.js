@@ -324,8 +324,14 @@ export const linkWhatsapp = (numero, mensaje) => `https://wa.me/${limpiarWhatsap
 // ============================================================
 export const listarConversaciones = () => db().from("whatsapp_conversaciones").select("*").order("ultimo_en", { ascending: false }).then(ok);
 export const listarMensajes = telefono => db().from("whatsapp_mensajes")
-  .select("id, wamid, direccion, tipo, texto, nombre_perfil, enviado_en").eq("telefono", telefono)
+  .select("id, wamid, direccion, tipo, texto, nombre_perfil, enviado_en, media_ruta, media_estado").eq("telefono", telefono)
   .order("enviado_en").order("id").limit(1000).then(ok);
+// Fotos de un chat (carpeta privada "whatsapp"): links temporales de 1 hora, { ruta: url }
+export async function urlsFotosChat(rutas) {
+  if (!rutas.length) return {};
+  const firmadas = await supabase.storage.from("whatsapp").createSignedUrls(rutas, 3600).then(ok);
+  return Object.fromEntries(firmadas.filter(x => x.signedUrl).map(x => [x.path, x.signedUrl]));
+}
 export const borrarConversacion = telefono => db().from("whatsapp_mensajes").delete().eq("telefono", telefono).then(ok);
 // ---------- Estado de cada chat (en la base: se ve igual en el celular y en el computador) ----------
 // oculto: null = automático (oculto si el cliente nunca escribió), true/false = decidido a mano.

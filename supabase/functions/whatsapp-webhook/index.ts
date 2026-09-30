@@ -3,6 +3,7 @@
 // mensajes en rinbo.whatsapp_mensajes. Solo lectura: nunca envía nada.
 //   URL para YCloud: https://mgxljvxjonopchpvmjkl.supabase.co/functions/v1/whatsapp-webhook
 // Seguridad: cada aviso trae la cabecera "YCloud-Signature: t=<segundos>,s=<hex>" = HMAC-SHA256("<t>.<cuerpo>", secreto).
+// Las fotos las guarda la función whatsapp-fotos (se le avisa al llegar una).
 // El secreto lo pone el dueño en Supabase → Edge Functions → Secrets como YCLOUD_WEBHOOK_SECRET (nunca va al repo ni al chat).
 // Número de la tienda (para saber qué mensajes son "salientes"): secreto opcional TIENDA_WHATSAPP; por defecto el de rinbo.js.
 
@@ -79,6 +80,8 @@ function aFila(m: Msg, tipoEvento: string, clave: string) {
     texto: textoDe(m),
     enviado_en: isNaN(fecha.getTime()) ? new Date().toISOString() : fecha.toISOString(),
     evento: tipoEvento,
+    // Foto o sticker: link firmado de YCloud (vence en unos días; whatsapp-fotos la baja apenas llega)
+    media_links: ["image", "sticker"].includes(m.type) && m[m.type]?.link ? [String(m[m.type].link)] : undefined,
   };
 }
 
@@ -117,5 +120,14 @@ Deno.serve(async (req) => {
     } catch (e) { ultimoError = String(e); }
   }
   if (ultimoError) { console.error("guardar", ultimoError); return responder({ error: "ocupado" }, 503); }
+  // Si trae fotos, pedirle a whatsapp-fotos que las guarde (en segundo plano: YCloud recibe su respuesta al tiro).
+  // Si esto falla, la foto queda pendiente y la guarda la próxima llamada.
+  if (filas.some(f => f?.media_links)) {
+    const guardarFotos = fetch(`${URL_BASE}/functions/v1/whatsapp-fotos`, {
+      method: "POST", headers: { apikey: LLAVE, Authorization: `Bearer ${LLAVE}` }, signal: AbortSignal.timeout(120000),
+    }).then(r => r.body?.cancel()).catch(e => console.error("fotos", String(e)));
+    // @ts-ignore EdgeRuntime existe en Supabase
+    if (typeof EdgeRuntime !== "undefined") EdgeRuntime.waitUntil(guardarFotos); else await guardarFotos;
+  }
   return responder({ ok: true, guardados, evento: tipoEvento });
 });

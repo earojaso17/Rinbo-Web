@@ -344,3 +344,7 @@ button.etiqueta-chat:not(.activa) { opacity: .65; }
 .crm-abrir { font-size: .8rem; color: var(--muted); text-decoration: underline; margin-left: 2px; }
 .chat-opciones { display: grid; gap: 8px; max-height: 55dvh; overflow-y: auto; }
 .chat-opciones > .enlace { justify-self: start; font-size: .82rem; padding: 0; }
+
+/* Fotos en el chat */
+.foto-chat { display: block; margin: -4px -8px 2px; }
+.foto-chat img { display: block; width: 100%; max-width: 260px; max-height: 320px; object-fit: cover; border-radius: 10px; background: var(--sunk); }
